@@ -6,9 +6,8 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     region: frankfurt
-    plan: 0.5c-512mb
+    plan: free
     healthCheckPath: /up
-    preDeployCommand: sh docker/predeploy.sh
     envVars:
       - key: APP_ENV
         value: production
@@ -47,4 +46,4 @@ databases:
     databaseName: nexus_vpn
     user: nexus_vpn
     region: frankfurt
-    plan: 0.1c-256mb
+    plan: free
