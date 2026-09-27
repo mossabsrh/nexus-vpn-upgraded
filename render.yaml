@@ -1,0 +1,50 @@
+services:
+  - type: web
+    name: nexus-vpn-api
+    runtime: docker
+    rootDir: nexus-vpn
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    region: frankfurt
+    plan: 0.5c-512mb
+    healthCheckPath: /up
+    preDeployCommand: sh docker/predeploy.sh
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_URL
+        fromService:
+          type: web
+          name: nexus-vpn-api
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: APP_KEY_SECRET
+        generateValue: true
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: nexus-vpn-db
+          property: connectionString
+      - key: CACHE_STORE
+        value: database
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_SECURE_COOKIE
+        value: "true"
+      - key: SESSION_SAME_SITE
+        value: lax
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: FRONTEND_URL
+        value: https://nexus-vpn-upgraded.vercel.app
+
+databases:
+  - name: nexus-vpn-db
+    databaseName: nexus_vpn
+    user: nexus_vpn
+    region: frankfurt
+    plan: 0.1c-256mb
