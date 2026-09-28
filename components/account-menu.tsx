@@ -18,7 +18,7 @@ import { Label } from "./ui/label"
 
 type SettingsTab = "general" | "email" | "password"
 
-export function AccountMenu() {
+export function AccountMenu({ mobile = false }: { mobile?: boolean }) {
   const auth = useAuth()
   const [isOpen, setIsOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -106,19 +106,32 @@ export function AccountMenu() {
   return (
     <>
       {/* Avatar/Profile Button */}
-      <div className="relative">
+      <div className={mobile ? "relative w-full" : "relative"}>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center justify-center w-9 h-9 rounded-full bg-primary/20 text-primary hover:bg-primary/30 transition-colors font-semibold text-sm"
+          className={mobile
+            ? "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-foreground hover:bg-muted transition-colors"
+            : "flex items-center justify-center w-9 h-9 rounded-full bg-primary/20 text-primary hover:bg-primary/30 transition-colors font-semibold text-sm"}
           aria-label="Account menu"
           title={auth.user?.email}
         >
-          {getInitial(auth.user?.email || "")}
+          {mobile ? (
+            <>
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-semibold text-primary">
+                {getInitial(auth.user?.email || "")}
+              </span>
+              <span className="truncate">{auth.user?.email}</span>
+            </>
+          ) : (
+            getInitial(auth.user?.email || "")
+          )}
         </button>
 
         {/* Dropdown Menu */}
         {isOpen && (
-          <div className="absolute right-0 mt-2 w-56 rounded-xl bg-background border border-border shadow-lg z-50 overflow-hidden">
+          <div className={mobile
+            ? "relative mt-2 w-full rounded-xl bg-background border border-border shadow-lg z-50 overflow-hidden"
+            : "absolute right-0 mt-2 w-56 rounded-xl bg-background border border-border shadow-lg z-50 overflow-hidden"}>
             <div className="p-4 border-b border-border">
               <p className="text-sm text-muted-foreground">Account</p>
               <p className="text-sm font-semibold text-foreground truncate">{auth.user?.email}</p>

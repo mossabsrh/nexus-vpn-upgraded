@@ -131,7 +131,7 @@ export function AuthDialog({
         </DialogTrigger>
       )}
 
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-h-[calc(100dvh-2rem)] max-w-lg overflow-y-auto overscroll-contain">
         <DialogHeader>
           <DialogTitle>
             {mode === "sign-in" ? "Sign in to NexusVPN" : "Create your NexusVPN account"}
@@ -247,7 +247,7 @@ export function AuthDialog({
                       <label
                         key={plan.id}
                         className={cn(
-                          "cursor-pointer rounded-2xl border p-4 transition-all min-h-[160px] flex flex-col justify-between",
+                          "cursor-pointer rounded-2xl border p-3 sm:p-4 transition-all min-h-[112px] sm:min-h-[160px] flex flex-col justify-between",
                           selectedPlan === plan.id
                             ? "border-primary bg-primary/10"
                             : "border-border bg-muted/70 hover:border-foreground",

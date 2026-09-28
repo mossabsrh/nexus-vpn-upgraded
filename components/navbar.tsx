@@ -19,6 +19,7 @@ export function Navbar() {
   const auth = useAuth()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isMobileAuthOpen, setIsMobileAuthOpen] = useState(false)
   const [activeSection, setActiveSection] = useState("")
 
   useEffect(() => {
@@ -150,7 +151,7 @@ export function Navbar() {
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.25, ease: "easeInOut" }}
-              className="md:hidden overflow-hidden"
+              className="md:hidden max-h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain"
             >
               <div className="pt-4 pb-2 flex flex-col gap-1">
                 {navLinks.map((link) => (
@@ -169,14 +170,19 @@ export function Navbar() {
                   </div>
                   {auth.isAuthenticated ? (
                     <div className="px-3 py-2.5">
-                      <AccountMenu />
+                      <AccountMenu mobile />
                     </div>
                   ) : (
-                    <AuthDialog
-                      triggerText="Sign in"
-                      triggerClassName="px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground text-left"
-                      onTriggerClick={() => setIsMobileMenuOpen(false)}
-                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false)
+                        setIsMobileAuthOpen(true)
+                      }}
+                      className="px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground text-left"
+                    >
+                      Sign in
+                    </button>
                   )}
                   <a href="#pricing" className="px-3 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium text-center" onClick={() => setIsMobileMenuOpen(false)}>
                     Get started
@@ -187,6 +193,12 @@ export function Navbar() {
           )}
         </AnimatePresence>
       </div>
+
+      <AuthDialog
+        open={isMobileAuthOpen}
+        onOpenChange={setIsMobileAuthOpen}
+        hideTrigger
+      />
     </motion.header>
   )
 }

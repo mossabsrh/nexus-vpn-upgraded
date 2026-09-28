@@ -118,7 +118,7 @@ export function PricingSection() {
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-4 lg:gap-5">
-          {plans.map((plan, i) => (
+          {comparisonPlans.map((plan, i) => (
             <motion.div
               key={plan.name}
               initial={{ opacity: 0, y: 24 }}
