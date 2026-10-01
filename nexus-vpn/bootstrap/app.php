@@ -22,6 +22,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/auth/register',
             'api/auth/login',
             'api/auth/logout',
+            'api/checkout',
+            'api/checkout/*',
             'api/testimonials',
             'api/admin/*',
         ]);
