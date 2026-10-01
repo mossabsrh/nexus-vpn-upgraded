@@ -47,7 +47,7 @@ Route::get('pricing', function () {
     ])->header('Access-Control-Allow-Origin', '*');
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['web', 'auth'])->group(function () {
     Route::post('checkout', [PaymentController::class, 'createCheckout']);
     Route::get('checkout/{checkoutId}/verify', [PaymentController::class, 'verify']);
 });
