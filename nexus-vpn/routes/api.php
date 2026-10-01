@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\TestimonialController;
 use App\Http\Controllers\Api\AdminController;
 use App\Models\Plan;
@@ -46,9 +47,9 @@ Route::get('pricing', function () {
     ])->header('Access-Control-Allow-Origin', '*');
 });
 
-Route::post('checkout', function (Request $request) {
-    return response()->json([
-        'received' => $request->all(),
-        'headers' => $request->headers->all(),
-    ])->header('Access-Control-Allow-Origin', '*');
+Route::middleware('auth')->group(function () {
+    Route::post('checkout', [PaymentController::class, 'createCheckout']);
+    Route::get('checkout/{checkoutId}/verify', [PaymentController::class, 'verify']);
 });
+
+Route::post('webhooks/chargily', [PaymentController::class, 'webhook']);

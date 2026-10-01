@@ -40,6 +40,12 @@ services:
         value: database
       - key: FRONTEND_URL
         value: https://nexus-vpn-upgraded.vercel.app
+      - key: CHARGILY_MODE
+        value: test
+      - key: CHARGILY_PUBLIC_KEY
+        value: ""
+      - key: CHARGILY_SECRET_KEY
+        value: ""
 
 databases:
   - name: nexus-vpn-db

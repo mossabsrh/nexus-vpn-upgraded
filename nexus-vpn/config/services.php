@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'chargily' => [
+        'mode' => env('CHARGILY_MODE', 'test'),
+        'public_key' => env('CHARGILY_PUBLIC_KEY'),
+        'secret_key' => env('CHARGILY_SECRET_KEY'),
+    ],
+
 ];
