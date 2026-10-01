@@ -9,7 +9,7 @@ class PlansTableSeeder extends Seeder
 {
     public function run()
     {
-        DB::table('plans')->insert([
+        $plans = [
             [
                 'slug' => 'essential',
                 'name' => 'Essential',
@@ -20,8 +20,6 @@ class PlansTableSeeder extends Seeder
                 'features' => json_encode(['Up to 3 devices','All 87 server locations','WireGuard & OpenVPN','Zero-log policy','Kill switch','Email support']),
                 'popular' => 0,
                 'cta' => 'Start trial',
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'slug' => 'standard',
@@ -33,8 +31,6 @@ class PlansTableSeeder extends Seeder
                 'features' => json_encode(['Unlimited devices','All 87 server locations','WireGuard & OpenVPN','Zero-log policy','Kill switch','Split tunneling','DNS leak protection','Priority support']),
                 'popular' => 1,
                 'cta' => 'Start trial',
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'slug' => 'team',
@@ -46,9 +42,26 @@ class PlansTableSeeder extends Seeder
                 'features' => json_encode(['Everything in Standard','Centralized dashboard','Usage analytics','Dedicated IP option','SSO / SAML support','Account manager','SLA guarantee']),
                 'popular' => 0,
                 'cta' => 'Contact us',
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
-        ]);
+        ];
+
+        foreach ($plans as $plan) {
+            DB::table('plans')->updateOrInsert(
+                ['slug' => $plan['slug']],
+                [
+                    'name' => $plan['name'],
+                    'description' => $plan['description'],
+                    'monthly_price' => $plan['monthly_price'],
+                    'yearly_price' => $plan['yearly_price'],
+                    'yearly_total' => $plan['yearly_total'],
+                    'currency' => 'DZD',
+                    'features' => $plan['features'],
+                    'popular' => $plan['popular'],
+                    'cta' => $plan['cta'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+        }
     }
 }
