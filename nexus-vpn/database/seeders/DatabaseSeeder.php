@@ -18,12 +18,13 @@ class DatabaseSeeder extends Seeder
             PlansTableSeeder::class,
         ]);
 
-        // Example user
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Example user (idempotent for redeploys)
+        User::updateOrCreate(
+            ['email' => 'test@example.com'],
+            [
+                'name' => 'Test User',
+                'password' => bcrypt('password'),
+            ]
+        );
     }
 }

@@ -57,6 +57,16 @@ class ChargilyPaymentTest extends TestCase
         });
     }
 
+    public function test_database_seeders_are_idempotent_when_run_twice(): void
+    {
+        $this->artisan('db:seed')->assertSuccessful();
+        $this->artisan('db:seed')->assertSuccessful();
+
+        $this->assertDatabaseCount('plans', 3);
+        $this->assertDatabaseCount('users', 1);
+        $this->assertDatabaseHas('users', ['email' => 'test@example.com']);
+    }
+
     public function test_webhook_rejects_invalid_signature(): void
     {
         config([
