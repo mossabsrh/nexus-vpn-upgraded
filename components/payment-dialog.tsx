@@ -37,7 +37,9 @@ export function PaymentDialog({ plan, billingPeriod, trigger }: PaymentDialogPro
 
       if (!response.ok) {
         setStatus('error')
-        setMessage(data.message || 'Unable to create checkout. Please try again.')
+        setMessage(response.status === 401
+          ? 'Sign in before subscribing, then try again.'
+          : data.message || 'Unable to create checkout. Please try again.')
         return
       }
 
