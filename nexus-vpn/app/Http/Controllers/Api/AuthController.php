@@ -105,9 +105,13 @@ class AuthController extends Controller
 
     private function userPayload(User $user): array
     {
-        $subscription = $user->subscriptions()
+        $activeSubscription = $user->subscriptions()
             ->with('plan')
             ->whereIn('status', ['active', 'trialing'])
+            ->latest()
+            ->first();
+        $latestSubscription = $user->subscriptions()
+            ->with('plan')
             ->latest()
             ->first();
 
@@ -116,7 +120,9 @@ class AuthController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'role' => $user->role,
-            'planId' => $subscription?->plan?->slug,
+            'planId' => $activeSubscription?->plan?->slug,
+            'subscriptionStatus' => $activeSubscription?->status ?? $latestSubscription?->status,
+            'lastPlanId' => $latestSubscription?->plan?->slug,
         ];
     }
 

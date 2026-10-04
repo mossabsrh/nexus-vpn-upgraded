@@ -17,7 +17,8 @@ class PaymentController extends Controller
     public function createCheckout(Request $request): JsonResponse
     {
         $request->validate([
-            'plan_id' => ['required', 'exists:plans,id'],
+            'plan_id' => ['required_without:plan_slug', 'integer', 'exists:plans,id'],
+            'plan_slug' => ['required_without:plan_id', 'string', 'exists:plans,slug'],
             'billing_period' => ['nullable', 'in:monthly,yearly'],
             'amount' => ['nullable', 'integer', 'min:1'],
         ]);
@@ -31,7 +32,9 @@ class PaymentController extends Controller
             ], 401);
         }
 
-        $plan = Plan::query()->findOrFail($request->input('plan_id'));
+        $plan = $request->filled('plan_id')
+            ? Plan::query()->findOrFail($request->input('plan_id'))
+            : Plan::query()->where('slug', $request->input('plan_slug'))->firstOrFail();
         $billingPeriod = $request->input('billing_period', 'monthly');
         $amount = (int) ($request->input('amount') ?? match ($billingPeriod) {
             'yearly' => $plan->yearly_total ?? $plan->yearly_price ?? $plan->monthly_price,
@@ -235,6 +238,8 @@ class PaymentController extends Controller
                 'email' => $user->email,
                 'role' => $user->role,
                 'planId' => $plan->slug,
+                'subscriptionStatus' => 'trialing',
+                'lastPlanId' => $plan->slug,
             ],
             'subscription' => [
                 'id' => $subscription->id,
@@ -331,7 +336,8 @@ class PaymentController extends Controller
             'plan_id' => $plan->id,
             'billing_period' => $billingPeriod,
             'status' => 'active',
-            'current_period_end' => now()->addMonth(),
+            'trial_ends_at' => null,
+            'current_period_end' => $billingPeriod === 'yearly' ? now()->addYear() : now()->addMonth(),
         ];
 
         if ($subscription) {

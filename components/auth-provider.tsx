@@ -10,6 +10,8 @@ export type AuthUser = {
   role?: "user" | "admin"
   password?: string
   planId?: string
+  subscriptionStatus?: "trialing" | "active" | "past_due" | "canceled"
+  lastPlanId?: string
 }
 
 type AuthContextType = {
@@ -58,6 +60,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         name: data.user.name,
         role: data.user.role,
         planId: data.user.planId,
+        subscriptionStatus: data.user.subscriptionStatus,
+        lastPlanId: data.user.lastPlanId,
       }
 
       setUser(userData)
@@ -93,6 +97,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         name: data.user.name,
         role: data.user.role,
         planId: data.user.planId,
+        subscriptionStatus: data.user.subscriptionStatus,
+        lastPlanId: data.user.lastPlanId,
       }
 
       setUser(userData)
@@ -138,7 +144,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: false, error: data.message || data.error || "Unable to cancel subscription." }
       }
 
-      setUser((currentUser) => currentUser ? { ...currentUser, planId: undefined } : currentUser)
+      setUser((currentUser) => currentUser ? {
+        ...currentUser,
+        planId: undefined,
+        subscriptionStatus: "canceled",
+        lastPlanId: currentUser.planId ?? currentUser.lastPlanId,
+      } : currentUser)
       return { success: true }
     } catch (err) {
       return { success: false, error: err instanceof Error ? err.message : "Unable to cancel subscription." }

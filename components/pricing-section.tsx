@@ -214,44 +214,42 @@ export function PricingSection() {
                     >
                       {plan.cta}
                     </a>
-                  ) : auth.user ? (
-                    auth.user.planId ? (
-                      auth.user.planId === plan.slug ? (
-                        <button
-                          type="button"
-                          disabled
-                          className="w-full rounded-xl border border-border bg-muted py-3 text-center text-sm font-medium text-muted-foreground disabled:cursor-default"
-                        >
-                          Current plan
-                        </button>
-                      ) : (
-                        <PaymentDialog plan={plan} trigger={
-                          <button
-                            type="button"
-                            className={`w-full py-3 rounded-xl text-sm font-medium text-center transition-all duration-200 ${
-                              plan.popular
-                                ? "bg-primary text-primary-foreground hover:bg-primary/90 glow-cyan"
-                                : "bg-muted border border-border text-foreground hover:bg-muted/80"
-                            }`}
-                          >
-                            {plan.cta}
-                          </button>
-                        } />
-                      )
-                    ) : (
+                  ) : auth.user?.planId ? (
+                    auth.user.planId === plan.slug ? (
                       <button
                         type="button"
-                        onClick={() => handleStartTrial(plan.slug)}
-                        disabled={startingTrial !== null}
-                        className={`w-full py-3 rounded-xl text-sm font-medium text-center transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
+                        disabled
+                        className="w-full rounded-xl border border-border bg-muted py-3 text-center text-sm font-medium text-muted-foreground disabled:cursor-default"
+                      >
+                        Current plan
+                      </button>
+                    ) : (
+                      <PaymentDialog plan={plan} billingPeriod={isYearly ? 'yearly' : 'monthly'} trigger={
+                        <button
+                          type="button"
+                          className={`w-full py-3 rounded-xl text-sm font-medium text-center transition-all duration-200 ${
+                            plan.popular
+                              ? "bg-primary text-primary-foreground hover:bg-primary/90 glow-cyan"
+                              : "bg-muted border border-border text-foreground hover:bg-muted/80"
+                          }`}
+                        >
+                          {plan.cta}
+                        </button>
+                      } />
+                    )
+                  ) : auth.user?.subscriptionStatus === 'canceled' || auth.user?.subscriptionStatus === 'past_due' ? (
+                    <PaymentDialog plan={plan} billingPeriod={isYearly ? 'yearly' : 'monthly'} trigger={
+                      <button
+                        type="button"
+                        className={`w-full py-3 rounded-xl text-sm font-medium text-center transition-all duration-200 ${
                           plan.popular
                             ? "bg-primary text-primary-foreground hover:bg-primary/90 glow-cyan"
                             : "bg-muted border border-border text-foreground hover:bg-muted/80"
                         }`}
                       >
-                        {startingTrial === plan.slug ? 'Starting trial...' : 'Start 7-day trial'}
+                        {auth.user.lastPlanId === plan.slug ? 'Resubscribe' : 'Subscribe'}
                       </button>
-                    )
+                    } />
                   ) : (
                     <button
                       type="button"
