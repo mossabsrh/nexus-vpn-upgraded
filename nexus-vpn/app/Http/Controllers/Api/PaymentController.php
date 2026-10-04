@@ -214,9 +214,28 @@ class PaymentController extends Controller
         $user = $request->user();
 
         if ($user->subscriptions()->exists()) {
+            $activeSubscription = $user->subscriptions()
+                ->with('plan')
+                ->whereIn('status', ['active', 'trialing'])
+                ->latest()
+                ->first();
+            $latestSubscription = $user->subscriptions()
+                ->with('plan')
+                ->latest()
+                ->first();
+
             return response()->json([
                 'success' => false,
                 'message' => 'This account already has a subscription.',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'planId' => $activeSubscription?->plan?->slug,
+                    'subscriptionStatus' => $activeSubscription?->status ?? $latestSubscription?->status,
+                    'lastPlanId' => $latestSubscription?->plan?->slug,
+                ],
             ], 409);
         }
 

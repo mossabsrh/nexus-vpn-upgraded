@@ -118,6 +118,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json()
 
       if (!response.ok) {
+        if (data.user) {
+          setUser(data.user)
+        }
         return {
           success: false,
           error: data.message || data.error || 'Unable to start the trial.',

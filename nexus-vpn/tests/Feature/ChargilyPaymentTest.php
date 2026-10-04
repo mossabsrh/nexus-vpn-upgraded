@@ -251,7 +251,9 @@ class ChargilyPaymentTest extends TestCase
 
         $this->actingAs($user)->postJson('/api/subscriptions/trial', [
             'plan_slug' => $plan->slug,
-        ])->assertStatus(409);
+        ])->assertStatus(409)
+            ->assertJsonPath('user.subscriptionStatus', 'trialing')
+            ->assertJsonPath('user.lastPlanId', 'trial-test');
     }
 
     public function test_authenticated_user_payload_includes_active_subscription_plan(): void
