@@ -17,7 +17,7 @@ type AuthContextType = {
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   signup: (email: string, name: string, password: string, passwordConfirmation: string, planId: string) => Promise<{ success: boolean; error?: string }>
-  startTrial: (planSlug: string) => Promise<{ success: boolean; error?: string }>
+  startTrial: (planSlug: string) => Promise<{ success: boolean; error?: string; unauthenticated?: boolean }>
   cancelSubscription: () => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
 }
@@ -112,12 +112,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json()
 
       if (!response.ok) {
-        return { success: false, error: data.message || data.error || 'Unable to start the trial.' }
+        return {
+          success: false,
+          error: data.message || data.error || 'Unable to start the trial.',
+          unauthenticated: response.status === 401,
+        }
       }
 
-      setUser((currentUser) => currentUser
-        ? { ...currentUser, planId: data.subscription.planId }
-        : currentUser)
+      setUser(data.user)
       return { success: true }
     } catch (err) {
       return { success: false, error: err instanceof Error ? err.message : 'Unable to start the trial.' }

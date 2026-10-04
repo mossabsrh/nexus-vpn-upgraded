@@ -171,7 +171,8 @@ class ChargilyPaymentTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('subscription.status', 'trialing')
-            ->assertJsonPath('subscription.planId', 'trial-test');
+            ->assertJsonPath('subscription.planId', 'trial-test')
+            ->assertJsonPath('user.planId', 'trial-test');
 
         $this->assertDatabaseHas('subscriptions', [
             'user_id' => $user->id,

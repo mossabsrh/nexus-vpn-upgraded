@@ -40,7 +40,9 @@ export function PricingSection() {
     setStartingTrial(planSlug)
     setTrialError(null)
     const result = await auth.startTrial(planSlug)
-    if (!result.success) {
+    if (result.unauthenticated) {
+      setAuthOpen(true)
+    } else if (!result.success) {
       setTrialError(result.error ?? 'Unable to start the trial.')
     }
     setStartingTrial(null)
@@ -253,14 +255,15 @@ export function PricingSection() {
                   ) : (
                     <button
                       type="button"
-                      onClick={() => setAuthOpen(true)}
-                      className={`w-full py-3 rounded-xl text-sm font-medium text-center transition-all duration-200 ${
+                      onClick={() => handleStartTrial(plan.slug)}
+                      disabled={startingTrial !== null}
+                      className={`w-full py-3 rounded-xl text-sm font-medium text-center transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
                         plan.popular
                           ? "bg-primary text-primary-foreground hover:bg-primary/90 glow-cyan"
                           : "bg-muted border border-border text-foreground hover:bg-muted/80"
                       }`}
                     >
-                      Sign in to pay
+                      {startingTrial === plan.slug ? 'Starting trial...' : 'Start 7-day trial'}
                     </button>
                   )}
                 </div>

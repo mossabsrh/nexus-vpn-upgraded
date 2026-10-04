@@ -229,6 +229,13 @@ class PaymentController extends Controller
 
         return response()->json([
             'success' => true,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'planId' => $plan->slug,
+            ],
             'subscription' => [
                 'id' => $subscription->id,
                 'status' => $subscription->status,
