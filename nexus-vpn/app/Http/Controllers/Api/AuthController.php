@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Plan;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 
@@ -21,14 +23,33 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'plan_slug' => ['required', 'string', 'exists:plans,slug'],
         ]);
 
         try {
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-            ]);
+            $user = DB::transaction(function () use ($request) {
+                $user = User::create([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'password' => Hash::make($request->password),
+                ]);
+
+                if ($request->input('plan_slug') !== 'team') {
+                    $plan = Plan::query()->where('slug', $request->input('plan_slug'))->firstOrFail();
+                    $trialEndsAt = now()->addDays(7);
+
+                    $user->subscriptions()->create([
+                        'plan_id' => $plan->id,
+                        'seats' => 1,
+                        'billing_period' => 'monthly',
+                        'status' => 'trialing',
+                        'trial_ends_at' => $trialEndsAt,
+                        'current_period_end' => $trialEndsAt,
+                    ]);
+                }
+
+                return $user;
+            });
 
             Auth::login($user);
             $request->session()->regenerate();

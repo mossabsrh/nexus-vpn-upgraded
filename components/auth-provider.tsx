@@ -17,6 +17,7 @@ type AuthContextType = {
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   signup: (email: string, name: string, password: string, passwordConfirmation: string, planId: string) => Promise<{ success: boolean; error?: string }>
+  startTrial: (planSlug: string) => Promise<{ success: boolean; error?: string }>
   cancelSubscription: () => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
 }
@@ -76,6 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email,
           password,
           password_confirmation: passwordConfirmation,
+          plan_slug: planId,
         }),
       })
 
@@ -90,13 +92,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: data.user.email,
         name: data.user.name,
         role: data.user.role,
-        planId,
+        planId: data.user.planId,
       }
 
       setUser(userData)
       return { success: true }
     } catch (err) {
       return { success: false, error: err instanceof Error ? err.message : "Registration failed" }
+    }
+  }
+
+  const startTrial = async (planSlug: string) => {
+    try {
+      const response = await apiFetch('/subscriptions/trial', {
+        method: 'POST',
+        body: JSON.stringify({ plan_slug: planSlug }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        return { success: false, error: data.message || data.error || 'Unable to start the trial.' }
+      }
+
+      setUser((currentUser) => currentUser
+        ? { ...currentUser, planId: data.subscription.planId }
+        : currentUser)
+      return { success: true }
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : 'Unable to start the trial.' }
     }
   }
 
@@ -129,6 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: Boolean(user),
     login,
     signup,
+    startTrial,
     cancelSubscription,
     logout,
   }

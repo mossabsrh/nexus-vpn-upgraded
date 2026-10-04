@@ -193,6 +193,51 @@ class PaymentController extends Controller
         ]);
     }
 
+    public function startTrial(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'plan_slug' => ['required', 'string', 'exists:plans,slug'],
+        ]);
+
+        $plan = Plan::query()->where('slug', $validated['plan_slug'])->firstOrFail();
+
+        if ($plan->slug === 'team') {
+            return response()->json([
+                'success' => false,
+                'message' => 'A trial is not available for the Team plan.',
+            ], 422);
+        }
+
+        $user = $request->user();
+
+        if ($user->subscriptions()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This account already has a subscription.',
+            ], 409);
+        }
+
+        $trialEndsAt = now()->addDays(7);
+        $subscription = $user->subscriptions()->create([
+            'plan_id' => $plan->id,
+            'seats' => 1,
+            'billing_period' => 'monthly',
+            'status' => 'trialing',
+            'trial_ends_at' => $trialEndsAt,
+            'current_period_end' => $trialEndsAt,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'subscription' => [
+                'id' => $subscription->id,
+                'status' => $subscription->status,
+                'planId' => $plan->slug,
+                'trial_ends_at' => $subscription->trial_ends_at,
+            ],
+        ]);
+    }
+
     public function webhook(Request $request): JsonResponse
     {
         $signature = (string) $request->header('signature', '');

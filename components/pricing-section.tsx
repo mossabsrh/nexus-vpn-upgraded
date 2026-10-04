@@ -13,6 +13,8 @@ export function PricingSection() {
   const [isYearly, setIsYearly] = useState(true)
   const [plans, setPlans] = useState<PricingPlan[]>(pricingPlans)
   const [authOpen, setAuthOpen] = useState(false)
+  const [startingTrial, setStartingTrial] = useState<string | null>(null)
+  const [trialError, setTrialError] = useState<string | null>(null)
 
   useEffect(() => {
     const loadPlans = async () => {
@@ -33,6 +35,16 @@ export function PricingSection() {
 
   const formatDZD = (value: number | null) =>
     value === null ? 'Custom pricing' : `${value.toLocaleString('en-US')} DZD`
+
+  const handleStartTrial = async (planSlug: string) => {
+    setStartingTrial(planSlug)
+    setTrialError(null)
+    const result = await auth.startTrial(planSlug)
+    if (!result.success) {
+      setTrialError(result.error ?? 'Unable to start the trial.')
+    }
+    setStartingTrial(null)
+  }
 
   const comparisonPlans = plans.length > 0 ? plans : pricingPlans
   const comparisonRows = [
@@ -201,18 +213,43 @@ export function PricingSection() {
                       {plan.cta}
                     </a>
                   ) : auth.user ? (
-                    <PaymentDialog plan={plan} trigger={
+                    auth.user.planId ? (
+                      auth.user.planId === plan.slug ? (
+                        <button
+                          type="button"
+                          disabled
+                          className="w-full rounded-xl border border-border bg-muted py-3 text-center text-sm font-medium text-muted-foreground disabled:cursor-default"
+                        >
+                          Current plan
+                        </button>
+                      ) : (
+                        <PaymentDialog plan={plan} trigger={
+                          <button
+                            type="button"
+                            className={`w-full py-3 rounded-xl text-sm font-medium text-center transition-all duration-200 ${
+                              plan.popular
+                                ? "bg-primary text-primary-foreground hover:bg-primary/90 glow-cyan"
+                                : "bg-muted border border-border text-foreground hover:bg-muted/80"
+                            }`}
+                          >
+                            {plan.cta}
+                          </button>
+                        } />
+                      )
+                    ) : (
                       <button
                         type="button"
-                        className={`w-full py-3 rounded-xl text-sm font-medium text-center transition-all duration-200 ${
+                        onClick={() => handleStartTrial(plan.slug)}
+                        disabled={startingTrial !== null}
+                        className={`w-full py-3 rounded-xl text-sm font-medium text-center transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
                           plan.popular
                             ? "bg-primary text-primary-foreground hover:bg-primary/90 glow-cyan"
                             : "bg-muted border border-border text-foreground hover:bg-muted/80"
                         }`}
                       >
-                        {plan.cta}
+                        {startingTrial === plan.slug ? 'Starting trial...' : 'Start 7-day trial'}
                       </button>
-                    } />
+                    )
                   ) : (
                     <button
                       type="button"
@@ -231,6 +268,12 @@ export function PricingSection() {
             </motion.div>
           ))}
         </div>
+
+        {trialError && (
+          <p role="alert" className="mt-4 text-sm text-destructive">
+            {trialError}
+          </p>
+        )}
 
         <AuthDialog open={authOpen} onOpenChange={setAuthOpen} initialMode="sign-in" />
 

@@ -67,6 +67,39 @@ class ChargilyPaymentTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'test@example.com']);
     }
 
+    public function test_registration_starts_a_trial_for_the_selected_plan(): void
+    {
+        $plan = Plan::create([
+            'slug' => 'signup-trial',
+            'name' => 'Signup Trial',
+            'description' => 'Signup trial plan',
+            'monthly_price' => 1500,
+            'yearly_price' => 15000,
+            'yearly_total' => 18000,
+            'currency' => 'DZD',
+            'features' => ['Signup trial'],
+            'popular' => false,
+            'cta' => 'Start trial',
+        ]);
+
+        $response = $this->postJson('/api/auth/register', [
+            'name' => 'Trial User',
+            'email' => 'trial-user@example.com',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'plan_slug' => $plan->slug,
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('user.planId', 'signup-trial');
+
+        $this->assertDatabaseHas('subscriptions', [
+            'user_id' => $response->json('user.id'),
+            'plan_id' => $plan->id,
+            'status' => 'trialing',
+        ]);
+    }
+
     public function test_payment_success_and_failure_pages_render(): void
     {
         $this->get('/payment/success?payment_id=pay_test_123')
@@ -114,6 +147,41 @@ class ChargilyPaymentTest extends TestCase
             'id' => $subscription->id,
             'status' => 'canceled',
         ]);
+    }
+
+    public function test_user_can_start_a_seven_day_trial_once(): void
+    {
+        $user = User::factory()->create();
+        $plan = Plan::create([
+            'slug' => 'trial-test',
+            'name' => 'Trial Test',
+            'description' => 'Trial plan',
+            'monthly_price' => 1500,
+            'yearly_price' => 15000,
+            'yearly_total' => 18000,
+            'currency' => 'DZD',
+            'features' => ['Trial test'],
+            'popular' => false,
+            'cta' => 'Start trial',
+        ]);
+
+        $response = $this->actingAs($user)->postJson('/api/subscriptions/trial', [
+            'plan_slug' => $plan->slug,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('subscription.status', 'trialing')
+            ->assertJsonPath('subscription.planId', 'trial-test');
+
+        $this->assertDatabaseHas('subscriptions', [
+            'user_id' => $user->id,
+            'plan_id' => $plan->id,
+            'status' => 'trialing',
+        ]);
+
+        $this->actingAs($user)->postJson('/api/subscriptions/trial', [
+            'plan_slug' => $plan->slug,
+        ])->assertStatus(409);
     }
 
     public function test_authenticated_user_payload_includes_active_subscription_plan(): void
