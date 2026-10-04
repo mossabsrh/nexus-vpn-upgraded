@@ -56,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: data.user.email,
         name: data.user.name,
         role: data.user.role,
+        planId: data.user.planId,
       }
 
       setUser(userData)

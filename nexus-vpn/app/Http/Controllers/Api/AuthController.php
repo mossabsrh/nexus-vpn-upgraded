@@ -35,12 +35,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => true,
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                ],
+                'user' => $this->userPayload($user),
                 'message' => 'User registered successfully',
             ], 201);
         } catch (\Exception $e) {
@@ -77,19 +72,31 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                    'role' => $user->role,
-            ],
+            'user' => $this->userPayload($user),
             'message' => 'Logged in successfully',
         ]);
     }
 
     public function me(Request $request): JsonResponse
     {
-        return response()->json(['user' => $request->user()]);
+        return response()->json(['user' => $this->userPayload($request->user())]);
+    }
+
+    private function userPayload(User $user): array
+    {
+        $subscription = $user->subscriptions()
+            ->with('plan')
+            ->whereIn('status', ['active', 'trialing'])
+            ->latest()
+            ->first();
+
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
+            'planId' => $subscription?->plan?->slug,
+        ];
     }
 
     public function logout(Request $request): JsonResponse

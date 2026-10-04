@@ -116,6 +116,36 @@ class ChargilyPaymentTest extends TestCase
         ]);
     }
 
+    public function test_authenticated_user_payload_includes_active_subscription_plan(): void
+    {
+        $user = User::factory()->create();
+        $plan = Plan::create([
+            'slug' => 'account-plan',
+            'name' => 'Account Plan',
+            'description' => 'Account plan',
+            'monthly_price' => 1500,
+            'yearly_price' => 15000,
+            'yearly_total' => 18000,
+            'currency' => 'DZD',
+            'features' => ['Account test'],
+            'popular' => false,
+            'cta' => 'Start now',
+        ]);
+
+        $user->subscriptions()->create([
+            'plan_id' => $plan->id,
+            'seats' => 1,
+            'billing_period' => 'monthly',
+            'status' => 'active',
+            'current_period_end' => now()->addMonth(),
+        ]);
+
+        $this->actingAs($user)
+            ->getJson('/api/me')
+            ->assertOk()
+            ->assertJsonPath('user.planId', 'account-plan');
+    }
+
     public function test_webhook_rejects_invalid_signature(): void
     {
         config([
