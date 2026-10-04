@@ -61,7 +61,7 @@
         <h1>Payment failed</h1>
         <p>Your payment was not completed.</p>
         <p>Payment ID: {{ $payment_id ?? 'N/A' }}</p>
-        <a class="btn" href="{{ env('APP_FRONTEND_URL', url('/dashboard')) }}">Return to My app</a>
+        <a class="btn" href="{{ config('services.frontend_url') }}">Return to My app</a>
     </div>
 </body>
 </html>

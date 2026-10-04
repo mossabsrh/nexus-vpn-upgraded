@@ -41,4 +41,6 @@ return [
         'secret_key' => env('CHARGILY_SECRET_KEY'),
     ],
 
+    'frontend_url' => env('FRONTEND_URL') ?: 'https://nexus-vpn-upgraded.vercel.app',
+
 ];

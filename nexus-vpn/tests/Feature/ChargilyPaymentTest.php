@@ -103,15 +103,19 @@ class ChargilyPaymentTest extends TestCase
 
     public function test_payment_success_and_failure_pages_render(): void
     {
+        config(['services.frontend_url' => 'https://nexus-vpn-upgraded.vercel.app']);
+
         $this->get('/payment/success?payment_id=pay_test_123')
             ->assertOk()
             ->assertSee('Payment successful')
-            ->assertSee('pay_test_123');
+            ->assertSee('pay_test_123')
+            ->assertSee('href="https://nexus-vpn-upgraded.vercel.app"', false);
 
         $this->get('/payment/failed?payment_id=pay_test_456')
             ->assertOk()
             ->assertSee('Payment failed')
-            ->assertSee('pay_test_456');
+            ->assertSee('pay_test_456')
+            ->assertSee('href="https://nexus-vpn-upgraded.vercel.app"', false);
     }
 
     public function test_user_can_cancel_their_subscription(): void
