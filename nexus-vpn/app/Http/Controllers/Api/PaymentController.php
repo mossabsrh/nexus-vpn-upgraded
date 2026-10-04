@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\Plan;
+use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -159,6 +160,36 @@ class PaymentController extends Controller
             'success' => true,
             'status' => $body['status'] ?? null,
             'checkout' => $body,
+        ]);
+    }
+
+    public function cancelSubscription(Request $request, ?Subscription $subscription = null): JsonResponse
+    {
+        $target = $subscription ?? $request->user()?->subscriptions()->latest()->first();
+
+        if (! $target) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No active subscription found.',
+            ], 404);
+        }
+
+        if ($request->user()?->id !== $target->user_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You cannot cancel another user\'s subscription.',
+            ], 403);
+        }
+
+        $target->update([
+            'status' => 'canceled',
+            'current_period_end' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'subscription' => $target->fresh(),
+            'message' => 'Subscription canceled successfully.',
         ]);
     }
 

@@ -99,6 +99,25 @@ export function AccountMenu({ mobile = false }: { mobile?: boolean }) {
     setSettingsOpen(false)
   }
 
+  const handleCancelSubscription = async () => {
+    setErrorMessage(null)
+    setStatusMessage(null)
+    setIsSubmitting(true)
+
+    const result = await auth.cancelSubscription()
+    if (!result.success) {
+      setErrorMessage(result.error ?? "Failed to cancel subscription.")
+      setIsSubmitting(false)
+      return
+    }
+
+    setStatusMessage("Subscription canceled successfully.")
+    setIsSubmitting(false)
+    setTimeout(() => {
+      setSettingsOpen(false)
+    }, 1500)
+  }
+
   const getInitial = (email: string) => {
     return email.charAt(0).toUpperCase()
   }
@@ -256,6 +275,17 @@ export function AccountMenu({ mobile = false }: { mobile?: boolean }) {
                     <p className="text-sm text-muted-foreground mb-2">Current Plan</p>
                     <p className="text-sm font-semibold text-foreground capitalize">{auth.user.planId}</p>
                   </div>
+                )}
+
+                {auth.user?.planId && (
+                  <button
+                    type="button"
+                    onClick={handleCancelSubscription}
+                    disabled={isSubmitting}
+                    className="w-full rounded-md border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/15 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isSubmitting ? "Cancelling..." : "Cancel Subscription"}
+                  </button>
                 )}
               </div>
             )}

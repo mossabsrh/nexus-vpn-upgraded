@@ -202,8 +202,8 @@ export function HeroSection() {
             className="text-center lg:text-left"
           >
             {/* Eyebrow */}
-            <motion.div variants={itemVariants} className="mb-6 inline-flex items-center gap-2">
-              <div className="flex items-center gap-2 rounded-full border border-border bg-muted/50 px-3 py-1.5">
+            <motion.div variants={itemVariants} className="mb-6 flex justify-center lg:justify-start">
+              <div className="flex max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-border bg-muted/50 px-3 py-1.5">
                 <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                 <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
                   Open audit · no logs · WireGuard®

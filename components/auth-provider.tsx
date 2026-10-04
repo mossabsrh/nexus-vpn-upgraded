@@ -17,6 +17,7 @@ type AuthContextType = {
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   signup: (email: string, name: string, password: string, passwordConfirmation: string, planId: string) => Promise<{ success: boolean; error?: string }>
+  cancelSubscription: () => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
 }
 
@@ -98,6 +99,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const cancelSubscription = async () => {
+    try {
+      const response = await apiFetch("/subscriptions/cancel", {
+        method: "POST",
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        return { success: false, error: data.message || data.error || "Unable to cancel subscription." }
+      }
+
+      setUser((currentUser) => currentUser ? { ...currentUser, planId: undefined } : currentUser)
+      return { success: true }
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : "Unable to cancel subscription." }
+    }
+  }
+
   const logout = async () => {
     await apiFetch("/auth/logout", { method: "POST", skipCsrf: true })
     setUser(null)
@@ -108,6 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: Boolean(user),
     login,
     signup,
+    cancelSubscription,
     logout,
   }
 

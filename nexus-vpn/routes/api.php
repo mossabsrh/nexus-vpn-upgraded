@@ -50,6 +50,8 @@ Route::get('pricing', function () {
 Route::middleware(['web', 'auth'])->group(function () {
     Route::post('checkout', [PaymentController::class, 'createCheckout']);
     Route::get('checkout/{checkoutId}/verify', [PaymentController::class, 'verify']);
+    Route::post('subscriptions/cancel', [PaymentController::class, 'cancelSubscription']);
+    Route::post('subscriptions/{subscription}/cancel', [PaymentController::class, 'cancelSubscription']);
 });
 
 Route::post('webhooks/chargily', [PaymentController::class, 'webhook']);

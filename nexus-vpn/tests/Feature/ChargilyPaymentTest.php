@@ -67,6 +67,55 @@ class ChargilyPaymentTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'test@example.com']);
     }
 
+    public function test_payment_success_and_failure_pages_render(): void
+    {
+        $this->get('/payment/success?payment_id=pay_test_123')
+            ->assertOk()
+            ->assertSee('Payment successful')
+            ->assertSee('pay_test_123');
+
+        $this->get('/payment/failed?payment_id=pay_test_456')
+            ->assertOk()
+            ->assertSee('Payment failed')
+            ->assertSee('pay_test_456');
+    }
+
+    public function test_user_can_cancel_their_subscription(): void
+    {
+        $user = User::factory()->create();
+        $plan = Plan::create([
+            'slug' => 'cancel-test',
+            'name' => 'Cancel Test',
+            'description' => 'Test plan',
+            'monthly_price' => 1500,
+            'yearly_price' => 15000,
+            'yearly_total' => 18000,
+            'currency' => 'DZD',
+            'features' => ['Cancel test'],
+            'popular' => false,
+            'cta' => 'Start now',
+        ]);
+
+        $subscription = $user->subscriptions()->create([
+            'plan_id' => $plan->id,
+            'seats' => 1,
+            'billing_period' => 'monthly',
+            'status' => 'active',
+            'current_period_end' => now()->addMonth(),
+        ]);
+
+        $response = $this->actingAs($user)->postJson('/api/subscriptions/cancel');
+
+        $response->assertOk()
+            ->assertJsonPath('subscription.id', $subscription->id)
+            ->assertJsonPath('subscription.status', 'canceled');
+
+        $this->assertDatabaseHas('subscriptions', [
+            'id' => $subscription->id,
+            'status' => 'canceled',
+        ]);
+    }
+
     public function test_webhook_rejects_invalid_signature(): void
     {
         config([
