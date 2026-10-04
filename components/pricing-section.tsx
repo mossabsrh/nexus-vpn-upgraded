@@ -251,18 +251,43 @@ export function PricingSection() {
                       </button>
                     } />
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => handleStartTrial(plan.slug)}
-                      disabled={startingTrial !== null}
-                      className={`w-full py-3 rounded-xl text-sm font-medium text-center transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
-                        plan.popular
-                          ? "bg-primary text-primary-foreground hover:bg-primary/90 glow-cyan"
-                          : "bg-muted border border-border text-foreground hover:bg-muted/80"
-                      }`}
-                    >
-                      {startingTrial === plan.slug ? 'Starting trial...' : 'Start 7-day trial'}
-                    </button>
+                    auth.user ? (
+                      <div className="grid gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleStartTrial(plan.slug)}
+                          disabled={startingTrial !== null}
+                          className={`w-full py-3 rounded-xl text-sm font-medium text-center transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
+                            plan.popular
+                              ? "bg-primary text-primary-foreground hover:bg-primary/90 glow-cyan"
+                              : "bg-muted border border-border text-foreground hover:bg-muted/80"
+                          }`}
+                        >
+                          {startingTrial === plan.slug ? 'Starting trial...' : 'Start 7-day trial'}
+                        </button>
+                        <PaymentDialog plan={plan} billingPeriod={isYearly ? 'yearly' : 'monthly'} trigger={
+                          <button
+                            type="button"
+                            className="w-full rounded-xl border border-border bg-background py-3 text-center text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                          >
+                            Subscribe now
+                          </button>
+                        } />
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleStartTrial(plan.slug)}
+                        disabled={startingTrial !== null}
+                        className={`w-full py-3 rounded-xl text-sm font-medium text-center transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
+                          plan.popular
+                            ? "bg-primary text-primary-foreground hover:bg-primary/90 glow-cyan"
+                            : "bg-muted border border-border text-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        {startingTrial === plan.slug ? 'Starting trial...' : 'Start 7-day trial'}
+                      </button>
+                    )
                   )}
                 </div>
               </div>
