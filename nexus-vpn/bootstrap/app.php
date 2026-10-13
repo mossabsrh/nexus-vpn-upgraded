@@ -24,7 +24,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/auth/logout',
             'api/checkout',
             'api/checkout/*',
+            'api/subscriptions/*',
             'api/testimonials',
+            'api/settings/*',
             'api/admin/*',
         ]);
         $middleware->web(append: [
