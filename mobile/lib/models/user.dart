@@ -22,14 +22,18 @@ class AuthUser {
 
   bool get isAdmin => role == 'admin';
 
-  factory AuthUser.fromJson(Map<String, dynamic> json) => AuthUser(
-        id: (json['id'] as num).toInt(),
-        name: json['name'] as String? ?? '',
-        email: json['email'] as String? ?? '',
-        role: json['role'] as String? ?? 'user',
-        emailVerified: json['emailVerified'] as bool? ?? false,
-        planId: json['planId'] as String?,
-        subscriptionStatus: json['subscriptionStatus'] as String?,
-        hasVpnAccess: json['hasVpnAccess'] as bool? ?? false,
-      );
+  factory AuthUser.fromJson(Map<String, dynamic> json) {
+    final status = json['subscriptionStatus'] as String?;
+    final active = status == 'active' || status == 'trialing';
+    return AuthUser(
+      id: (json['id'] as num).toInt(),
+      name: json['name'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      role: json['role'] as String? ?? 'user',
+      emailVerified: json['emailVerified'] as bool? ?? false,
+      planId: json['planId'] as String?,
+      subscriptionStatus: status,
+      hasVpnAccess: json['hasVpnAccess'] as bool? ?? active,
+    );
+  }
 }

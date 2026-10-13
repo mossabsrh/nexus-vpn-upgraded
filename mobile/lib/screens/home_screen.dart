@@ -62,14 +62,65 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _SubscriptionCard extends StatelessWidget {
+class _SubscriptionCard extends ConsumerStatefulWidget {
   const _SubscriptionCard({required this.user});
 
   final AuthUser user;
 
   @override
+  ConsumerState<_SubscriptionCard> createState() => _SubscriptionCardState();
+}
+
+class _SubscriptionCardState extends ConsumerState<_SubscriptionCard> {
+  bool _canceling = false;
+
+  Future<void> _cancel() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Cancel Subscription'),
+        content: const Text('Are you sure you want to cancel your current subscription? Your active access will end.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Keep Active')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: NexusColors.destructive),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Yes, Cancel', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => _canceling = true);
+    try {
+      final api = ref.read(apiClientProvider);
+      final res = await api.post('/subscriptions/cancel');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(res['message']?.toString() ?? 'Subscription canceled.')),
+        );
+      }
+      await ref.read(authControllerProvider.notifier).refreshUser();
+    } on ApiException catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not cancel subscription. Please try again.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _canceling = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final muted = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6);
+    final isSubscribed = widget.user.subscriptionStatus == 'active' || widget.user.subscriptionStatus == 'trialing';
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(18),
@@ -84,9 +135,25 @@ class _SubscriptionCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 14),
-            _row('Plan', user.planId ?? '—', muted),
-            _row('Status', user.subscriptionStatus ?? 'none', muted),
-            _row('VPN access', user.hasVpnAccess ? 'Active' : 'Not active', muted),
+            _row('Plan', widget.user.planId ?? '—', muted),
+            _row('Status', widget.user.subscriptionStatus ?? 'none', muted),
+            _row('VPN access', widget.user.hasVpnAccess ? 'Active' : 'Not active', muted),
+            if (isSubscribed) ...[
+              const SizedBox(height: 14),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: NexusColors.destructive,
+                  side: BorderSide(color: NexusColors.destructive.withValues(alpha: 0.5)),
+                  minimumSize: const Size.fromHeight(42),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                icon: _canceling
+                    ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.cancel_outlined, size: 18),
+                label: const Text('Cancel Subscription'),
+                onPressed: _canceling ? null : _cancel,
+              ),
+            ],
           ],
         ),
       ),

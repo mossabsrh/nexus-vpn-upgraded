@@ -120,9 +120,11 @@ class AuthController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'role' => $user->role,
-            'planId' => $activeSubscription?->plan?->slug,
+            'emailVerified' => $user->hasVerifiedEmail(),
+            'planId' => $activeSubscription?->plan?->slug ?? $latestSubscription?->plan?->slug,
             'subscriptionStatus' => $activeSubscription?->status ?? $latestSubscription?->status,
             'lastPlanId' => $latestSubscription?->plan?->slug,
+            'hasVpnAccess' => $activeSubscription !== null,
         ];
     }
 
