@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -24,10 +25,14 @@ Route::get('/payment/failed', function (Request $request) {
     ]);
 })->name('payment.failed');
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['web', 'auth'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
+
+    Route::patch('/api/settings/profile', [AuthController::class, 'updateProfile']);
+    Route::put('/api/settings/password', [AuthController::class, 'updatePassword']);
+    Route::delete('/api/settings/account', [AuthController::class, 'deleteAccount']);
 });
 
 require __DIR__.'/settings.php';
