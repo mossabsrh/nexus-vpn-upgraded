@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,7 +28,7 @@ class ProfileController extends Controller
     /**
      * Update the user's profile settings.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(ProfileUpdateRequest $request): RedirectResponse|JsonResponse
     {
         $request->user()->fill($request->validated());
 
@@ -37,13 +38,26 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile updated successfully.',
+                'user' => [
+                    'id' => $request->user()->id,
+                    'name' => $request->user()->name,
+                    'email' => $request->user()->email,
+                    'role' => $request->user()->role,
+                ],
+            ]);
+        }
+
         return to_route('profile.edit');
     }
 
     /**
      * Delete the user's account.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request): RedirectResponse|JsonResponse
     {
         $request->validate([
             'password' => ['required', 'current_password'],
@@ -57,6 +71,13 @@ class ProfileController extends Controller
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Account deleted successfully.',
+            ]);
+        }
 
         return redirect('/');
     }
