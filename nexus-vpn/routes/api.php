@@ -5,8 +5,12 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\TestimonialController;
 use App\Http\Controllers\Api\AdminController;
 use App\Models\Plan;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Validation\Rule;
 
 Route::get('csrf-cookie', function () {
     return response()->noContent();
@@ -53,6 +57,68 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::post('subscriptions/trial', [PaymentController::class, 'startTrial']);
     Route::post('subscriptions/cancel', [PaymentController::class, 'cancelSubscription']);
     Route::post('subscriptions/{subscription}/cancel', [PaymentController::class, 'cancelSubscription']);
+
+    // Settings API Endpoints
+    Route::patch('settings/profile', function (Request $request) {
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($request->user()->id)],
+        ]);
+
+        $user = $request->user();
+        $user->fill($request->only('name', 'email'));
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile updated successfully.',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+            ],
+        ]);
+    });
+
+    Route::put('settings/password', function (Request $request) {
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $request->user()->update([
+            'password' => Hash::make($request->input('password')),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password updated successfully.',
+        ]);
+    });
+
+    Route::delete('settings/account', function (Request $request) {
+        $request->validate([
+            'password' => ['required', 'current_password'],
+        ]);
+
+        $user = $request->user();
+        Auth::guard('web')->logout();
+        $user->delete();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Account deleted successfully.',
+        ]);
+    });
 });
 
 Route::post('webhooks/chargily', [PaymentController::class, 'webhook']);

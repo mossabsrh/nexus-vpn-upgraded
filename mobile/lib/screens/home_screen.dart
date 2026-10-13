@@ -11,6 +11,8 @@ import '../providers/catalog_provider.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/primary_button.dart';
 
+import 'settings/settings_screen.dart';
+
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -22,6 +24,13 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const AppLogo(size: 24),
         actions: [
+          IconButton(
+            tooltip: 'Settings',
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            ),
+          ),
           IconButton(
             tooltip: 'Sign out',
             icon: const Icon(Icons.logout),
