@@ -39,6 +39,6 @@ class Plan {
         features: (json['features'] as List?)?.map((e) => e.toString()).toList() ?? const [],
         popular: json['popular'] as bool? ?? false,
         cta: json['cta'] as String?,
-        selfServe: json['selfServe'] as bool? ?? false,
+        selfServe: json['selfServe'] as bool? ?? (json['slug'] != 'team'),
       );
 }

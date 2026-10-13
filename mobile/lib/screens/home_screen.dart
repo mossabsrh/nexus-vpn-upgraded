@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../core/api_exception.dart';
 import '../core/theme.dart';
+import '../models/plan.dart';
 import '../models/user.dart';
 import '../providers/auth_provider.dart';
+import '../providers/catalog_provider.dart';
 import '../widgets/app_logo.dart';
+import '../widgets/primary_button.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -39,8 +44,8 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(height: 20),
                   if (!user.emailVerified) const _VerifyEmailBanner(),
                   _SubscriptionCard(user: user),
-                  const SizedBox(height: 16),
-                  const _ComingNextCard(),
+                  const SizedBox(height: 20),
+                  const _PlansAndCheckoutCard(),
                 ],
               ),
             ),
@@ -91,22 +96,146 @@ class _SubscriptionCard extends StatelessWidget {
       );
 }
 
-class _ComingNextCard extends StatelessWidget {
-  const _ComingNextCard();
+class _PlansAndCheckoutCard extends ConsumerStatefulWidget {
+  const _PlansAndCheckoutCard();
+
+  @override
+  ConsumerState<_PlansAndCheckoutCard> createState() => _PlansAndCheckoutCardState();
+}
+
+class _PlansAndCheckoutCardState extends ConsumerState<_PlansAndCheckoutCard> {
+  String? _selectedSlug;
+  bool _loadingCheckout = false;
+  bool _loadingTrial = false;
+
+  Future<void> _payWithChargily(String planSlug) async {
+    setState(() => _loadingCheckout = true);
+    try {
+      final api = ref.read(apiClientProvider);
+      final res = await api.post('/checkout', data: {
+        'plan_slug': planSlug,
+        'billing_period': 'monthly',
+      });
+      final checkoutUrl = res['checkout_url'] as String?;
+      if (checkoutUrl != null && checkoutUrl.isNotEmpty) {
+        final uri = Uri.parse(checkoutUrl);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          _showMsg('Could not open payment URL in browser.');
+        }
+      } else {
+        _showMsg(res['message']?.toString() ?? 'Checkout created successfully.');
+      }
+    } on ApiException catch (e) {
+      _showMsg(e.message);
+    } catch (_) {
+      _showMsg('Payment initialization failed. Please try again.');
+    } finally {
+      if (mounted) setState(() => _loadingCheckout = false);
+    }
+  }
+
+  Future<void> _startTrial(String planSlug) async {
+    setState(() => _loadingTrial = true);
+    try {
+      final api = ref.read(apiClientProvider);
+      final res = await api.post('/subscriptions/trial', data: {'plan_slug': planSlug});
+      _showMsg(res['message']?.toString() ?? '7-day trial started successfully!');
+      await ref.read(authControllerProvider.notifier).refreshUser();
+    } on ApiException catch (e) {
+      _showMsg(e.message);
+    } catch (_) {
+      _showMsg('Trial activation failed. Please try again.');
+    } finally {
+      if (mounted) setState(() => _loadingTrial = false);
+    }
+  }
+
+  void _showMsg(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
 
   @override
   Widget build(BuildContext context) {
+    final plansAsync = ref.watch(plansProvider);
     final muted = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6);
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Coming next', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Text('Plans, dashboard, Chargily payment, VPN config download and profile settings.',
-                style: TextStyle(color: muted)),
+            Row(
+              children: [
+                const Icon(Icons.local_offer_outlined, color: NexusColors.accent),
+                const SizedBox(width: 10),
+                Text('Available Plans & Payment', style: Theme.of(context).textTheme.titleMedium),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text('Choose a plan to pay with Chargily or start a 7-day free trial.',
+                style: TextStyle(color: muted, fontSize: 13)),
+            const SizedBox(height: 16),
+            plansAsync.when(
+              loading: () => const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (e, _) => Text('Could not load plans: $e', style: const TextStyle(color: NexusColors.destructive)),
+              data: (plans) {
+                final selfServe = plans.where((p) => p.selfServe).toList();
+                if (selfServe.isEmpty) {
+                  return Text('No plans available.', style: TextStyle(color: muted));
+                }
+                _selectedSlug ??= (selfServe.firstWhere((p) => p.popular, orElse: () => selfServe.first)).slug;
+
+                return Column(
+                  children: [
+                    ...selfServe.map((p) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: RadioListTile<String>(
+                            value: p.slug,
+                            groupValue: _selectedSlug,
+                            title: Text('${p.name} (${p.monthlyLabel})',
+                                style: const TextStyle(fontWeight: FontWeight.w600)),
+                            subtitle: p.description != null ? Text(p.description!) : null,
+                            onChanged: (val) => setState(() => _selectedSlug = val),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(
+                                color: _selectedSlug == p.slug
+                                    ? NexusColors.primary
+                                    : Theme.of(context).dividerColor,
+                              ),
+                            ),
+                          ),
+                        )),
+                    const SizedBox(height: 12),
+                    if (_selectedSlug != null) ...[
+                      PrimaryButton(
+                        label: 'Pay with Chargily',
+                        loading: _loadingCheckout,
+                        onPressed: () => _payWithChargily(_selectedSlug!),
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(48),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: _loadingTrial ? null : () => _startTrial(_selectedSlug!),
+                        child: _loadingTrial
+                            ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Text('Start 7-Day Free Trial'),
+                      ),
+                    ],
+                  ],
+                );
+              },
+            ),
           ],
         ),
       ),
