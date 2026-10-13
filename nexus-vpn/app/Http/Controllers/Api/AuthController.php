@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 
 class AuthController extends Controller
@@ -101,6 +102,65 @@ class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         return response()->json(['user' => $this->userPayload($request->user())]);
+    }
+
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($request->user()->id)],
+        ]);
+
+        $user = $request->user();
+        $user->fill($request->only('name', 'email'));
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile updated successfully.',
+            'user' => $this->userPayload($user),
+        ]);
+    }
+
+    public function updatePassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $request->user()->update([
+            'password' => Hash::make($request->input('password')),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password updated successfully.',
+        ]);
+    }
+
+    public function deleteAccount(Request $request): JsonResponse
+    {
+        $request->validate([
+            'password' => ['required', 'current_password'],
+        ]);
+
+        $user = $request->user();
+        Auth::guard('web')->logout();
+        $user->delete();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Account deleted successfully.',
+        ]);
     }
 
     private function userPayload(User $user): array
