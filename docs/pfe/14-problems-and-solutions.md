@@ -175,4 +175,13 @@
 * **Vérification** : Playwright — `/dashboard` (démo) et `/admin` (admin) chargés en une seule navigation, y compris après un second redémarrage ; 0 panic dans le journal ; `pnpm lint`, `tsc --noEmit`, `pnpm build` réussis ; `php artisan test --compact` : 131 réussis.
 * **Leçon** : un rechargement en boucle sans redirection HTTP oriente vers l'outillage de développement (HMR) plutôt que vers l'authentification ; lire d'abord le journal du serveur `next dev`. Remède : supprimer `.next/dev/cache` (ou `.next`) puis relancer.
 
-**Total : 24 problèmes documentés.**
+## P-25 — « CSRF token mismatch » à la connexion en production (frontend Vercel non redéployé)
+
+* **Symptôme** (2026-10-13) : sur `https://nexus-vpn-upgraded.vercel.app`, la connexion échouait avec « CSRF token mismatch » après un redéploiement du backend.
+* **Investigation** : le backend Render répondait normalement (`/up` → `200`, `/api/pricing` → `200` avec données PostgreSQL) ; via la réécriture Vercel, `csrf-cookie` → `204` avec cookies `XSRF-TOKEN` / `laravel_session` corrects (`path=/; secure; samesite=lax`) et une connexion (identifiants fictifs) avec session neuve → `401` attendu. En revanche, le JavaScript servi par Vercel ne correspondait pas au dépôt : `apiFetch` envoyait `/auth/login` avec `skipCsrf: true` et sans nouvel essai sur `419` (ancien code de `D:\nexus-vpn-upgraded.v2`). La liste des déploiements Vercel s'arrêtait au commit `6d6da5b` (2026-10-04) ; le commit `07a2307` présent sur GitHub `main` (auteur bien lié au compte `mossabsrh`) n'avait **aucun statut Vercel**.
+* **Cause** : le projet Vercel n'était plus relié au dépôt GitHub ; aucun push postérieur au 2026-10-04 n'avait déclenché de déploiement. L'ancien frontend, sans rafraîchissement du jeton, renvoyait un cookie `XSRF-TOKEN` périmé conservé par le navigateur → `419`.
+* **Solution** : reconnexion du dépôt `mossabsrh/nexus-vpn-upgraded` au projet Vercel puis déploiement de `main`. **Aucun fichier source modifié** : le code actuel de `lib/api.ts` (`ensureCsrfCookie`, nouvel essai unique sur `419`) corrigeait déjà le problème. Contournement immédiat : supprimer les cookies du site.
+* **Vérification** : `pnpm build` réussi sur un clone propre de `07a2307` ; après déploiement, le bundle en ligne contient la logique `419 → nouvel essai` (plus de `skipCsrf`) ; simulation avec un cookie `XSRF-TOKEN` périmé : premier essai `419`, nouvel essai après `csrf-cookie` → `401` (identifiants fictifs), soit le comportement attendu.
+* **Leçon** : en cas d'écart entre le code et le comportement en production, vérifier d'abord **quelle version est déployée** (bundle servi, liste des déploiements, statuts de commit GitHub) avant de déboguer le code.
+
+**Total : 25 problèmes documentés.**
