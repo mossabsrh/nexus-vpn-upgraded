@@ -27,22 +27,17 @@
 | `tests/Feature/Api/AccountDeletionTest.php` | 5 | `DELETE /api/account` : anonymisation + soft delete en conservant l'historique de facturation, impossibilité de se réauthentifier ensuite, exigence du mot de passe actuel (422), blocage des administrateurs (409 `admin_account`) et des propriétaires d'équipe (409 `team_owner`) |
 | `tests/Feature/Api/AdminUserDeletionTest.php` | 6 | `DELETE /api/admin/users/{user}` : anonymisation + conservation de l'historique, suppression d'un autre administrateur (s'il en reste un), refus de se supprimer soi-même et du dernier administrateur et d'un propriétaire d'équipe (422), refus pour un non-administrateur (403) |
 | `tests/Feature/Api/LoginAfterDeletionTest.php` | 3 | Régression connexion/suppression : un compte actif se connecte avec le bon mot de passe (e-mail insensible à la casse), un compte fermé (anonymisé) ne peut plus se connecter (401), et l'e-mail libéré peut être réutilisé à l'inscription (le nouveau mot de passe fonctionne, l'ancien non) |
+| `tests/Feature/Api/LegacyRoutesTest.php` | 4 | **Routes web héritées supprimées (R-03)** : `POST /register`, `/login`, `/forgot-password`, `/reset-password` → `404` sans création de compte ; `dashboard` et `settings/profile|password` → `404` sans modification ni suppression du compte ; `/` redirige vers `FRONTEND_URL` ; invité sur `GET /api/me` sans en-tête JSON → `401` (pas de redirection vers une route `login` inexistante) |
 
-### Tests hérités du starter kit (pages Inertia non utilisées)
+### Autres
 
 | Fichier | Nb | Ce qui est couvert |
 |---|---|---|
-| `tests/Feature/Auth/AuthenticationTest.php` | 4 | Écran de connexion Inertia, connexion/déconnexion web |
-| `tests/Feature/Auth/EmailVerificationTest.php` | 3 | Écran et lien de vérification web |
-| `tests/Feature/Auth/PasswordConfirmationTest.php` | 3 | Confirmation du mot de passe |
-| `tests/Feature/Auth/PasswordResetTest.php` | 4 | Réinitialisation via les pages web |
-| `tests/Feature/Auth/RegistrationTest.php` | 2 | Inscription via la page web |
-| `tests/Feature/DashboardTest.php` | 2 | Accès à la page `dashboard` |
-| `tests/Feature/Settings/PasswordUpdateTest.php` | 2 | Changement de mot de passe (page web) |
-| `tests/Feature/Settings/ProfileUpdateTest.php` | 5 | Profil et suppression de compte (pages web) |
 | `tests/Unit/ExampleTest.php` | 1 | Test d'exemple (`true is true`) |
 
-Total : 130 tests (104 sur l'API réelle et les commandes, 26 hérités).
+Les 25 tests hérités du starter kit (`tests/Feature/Auth/*`, `tests/Feature/Settings/*`, `tests/Feature/DashboardTest.php`) ont été supprimés le 2026-10-15 avec les routes qu'ils testaient (R-03).
+
+Total : 110 tests (exécution du 2026-10-15).
 
 ### Zones non couvertes identifiées
 
@@ -189,3 +184,15 @@ Le seul contrôle non concluant (« offres présentes immédiatement ») est une
 | `/dashboard` (utilisateur de démo) et `/admin` (administrateur) se chargent sans boucle | Script Playwright ad hoc (journal réseau + navigations), serveur `pnpm dev`, avant puis après redémarrage | ✅ une seule navigation par page ; 0 panic Turbopack |
 | Lint / types / build | `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm build` | ✅ |
 | Backend | `php artisan test --compact` | ✅ 131 réussis (508 assertions) |
+
+## 7. Correctifs R-03 et environnement local (2026-10-15)
+
+| Contrôle | Commande / outil | Résultat |
+|---|---|---|
+| Suite backend **avant** correctif, PHP local sans `sodium` | `php artisan test --compact` | ❌ 9 échecs (`Call to undefined function sodium_crypto_scalarmult_base()` : extension désactivée dans le `php.ini` WAMP local), 122 réussis — problème d'environnement, pas de code |
+| Suite backend après activation de `extension=sodium` (WAMP) | `php artisan test --compact` | ✅ 131 réussis (508 assertions) |
+| Suite backend après suppression des routes héritées (R-03) | `php artisan test --compact` | ✅ 110 réussis (460 assertions) |
+| Style PHP | `vendor/bin/pint --dirty` | ✅ |
+| Frontend | `pnpm lint`, `pnpm exec tsc --noEmit` | ✅ |
+| Page `/` du domaine Render avant correctif | `curl https://nexus-vpn-api.onrender.com/` | `500 Server Error` (page Inertia sans build Vite) |
+| IP vue par Laravel en production (R-05) | Tentatives de connexion (identifiants fictifs) sur `POST /api/auth/login` direct et via Vercel, lecture de `X-RateLimit-Remaining` | Compteurs multiples pour un même client (`0`, `2`, `1` restants) ; 12–13 tentatives sans `429` pour une limite de 10/min → IP de proxys changeantes (voir `08` R-05) |

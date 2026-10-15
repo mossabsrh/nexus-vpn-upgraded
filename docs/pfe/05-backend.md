@@ -158,13 +158,15 @@ Préfixe `/api`. « web » = session + CSRF. Toutes ont aussi `throttle:api`.
 
 Routes **hors du groupe `web`** (jeton `Authorization: Bearer`, sans session ni CSRF), ajoutées le 2026-10-07 pour l'application Flutter (D-15). Détail complet dans `07-api.md` §4bis. En résumé : `auth/{login,register,logout,forgot-password,reset-password}`, `me`, `email/verification-notification`, `account/{email,password}`, `DELETE account`, `account/{subscriptions,payments,payments/{payment}}`, `vpn/{credentials,config}`, `checkout`, `payments/{payment}/verify`, `subscriptions/{trial,cancel}`. L'administration n'est pas exposée. Le login web reste inchangé.
 
-### 6.2 Routes web (`routes/web.php`, `routes/auth.php`, `routes/settings.php`)
+### 6.2 Routes web (`routes/web.php`)
 
 | Méthode | Chemin | Rôle | Statut |
 |---|---|---|---|
 | GET | `/payment/success`, `/payment/failed` | Anciennes URL de retour Chargily : redirigent vers `FRONTEND_URL/payment/result?payment={id}` | **utilisées** (compatibilité checkouts anciens) |
 | GET | `/up` | Contrôle de santé Laravel | utilisée (hébergement) |
-| GET | `/`, `dashboard`, `login`, `register`, `forgot-password`, `reset-password/{token}`, `verify-email…`, `confirm-password`, `logout`, `settings/*` | Pages Inertia du starter kit | **héritées, non utilisées** (§10) |
+| GET | `/` | Redirige vers `FRONTEND_URL` (le domaine Laravel ne sert que l'API) | depuis 2026-10-15 (auparavant page Inertia en erreur `500` en production) |
+
+Les routes web d'authentification et de profil du starter kit (`routes/auth.php`, `routes/settings.php`, page `dashboard`) ont été **supprimées le 2026-10-15** (R-03, §10). Les invités non authentifiés hors API sont redirigés vers `FRONTEND_URL` (`redirectGuestsTo` dans `bootstrap/app.php`) ; sous `api/*`, ils reçoivent un `401` JSON.
 
 ## 7. Workflows métier importants
 
@@ -221,7 +223,7 @@ Garde-fous propres à chaque point d'entrée :
 * **Libre-service** : exige le **mot de passe actuel** ; refuse un **administrateur** (409 `admin_account`) ou un **propriétaire d'équipe** (409 `team_owner`) ; après fermeture, déconnexion et régénération de la session courante.
 * **Admin** : refuse (422) de supprimer le **dernier administrateur**, **soi-même**, ou un **propriétaire d'équipe** (sa suppression annulerait l'abonnement d'équipe et couperait tous les membres). L'audit enregistre l'administrateur comme acteur.
 
-> La route web héritée `DELETE /settings/profile` (R-03) reste hors périmètre : elle fait seulement un *soft delete* sans annuler l'abonnement ni révoquer le VPN.
+> L'ancienne route web héritée `DELETE /settings/profile`, qui faisait seulement un *soft delete* sans annuler l'abonnement ni révoquer le VPN, a été supprimée le 2026-10-15 (R-03) : `DELETE /api/account` est désormais la seule voie de suppression.
 
 ## 8. Commandes Artisan et planification
 
@@ -245,11 +247,10 @@ Le projet backend a été initialisé à partir du **Laravel React Starter Kit**
 
 * paquets `inertiajs/inertia-laravel` et `tightenco/ziggy` ; middleware `HandleInertiaRequests` (toujours ajouté au groupe `web`, donc exécuté aussi sur les routes API de session) ;
 * vue racine `resources/views/app.blade.php` (`@routes`, `@vite`, `@inertia`) et tout `resources/js/` (pages React/Inertia `welcome`, `dashboard`, `auth/*`, `settings/*`), `vite.config.js`, `package.json` du dossier `nexus-vpn/`, `components.json`, `eslint.config.js`, `tsconfig.json` ;
-* routes web `/`, `dashboard`, `routes/auth.php` (contrôleurs `app/Http/Controllers/Auth/*`) et `routes/settings.php` (contrôleurs `app/Http/Controllers/Settings/*`), FormRequests `LoginRequest` et `ProfileUpdateRequest` ;
-* tests associés : `tests/Feature/Auth/*`, `tests/Feature/Settings/*`, `tests/Feature/DashboardTest.php` ; fichier `tests/Pest.php` (Pest n'est pas installé) ;
+* fichier `tests/Pest.php` (Pest n'est pas installé) ;
 * workflows `nexus-vpn/.github/workflows/lint.yml` et `tests.yml` (PHP 8.4, build Vite), inactifs car hors de la racine du dépôt (voir `19-limitations-and-future-work.md` L-16).
 
-⚠️ À VÉRIFIER : ces routes héritées restent **enregistrées et accessibles**. Notamment `POST /register` crée un compte sans essai, et `DELETE /settings/profile` supprime (soft delete) le compte sans annuler l'abonnement ni révoquer les identifiants VPN. Le Dockerfile n'exécute pas `npm run build` ; la page Inertia `/` échouerait donc probablement en production faute de manifeste Vite (non testé).
+**Supprimé le 2026-10-15 (R-03)** : routes `routes/auth.php` et `routes/settings.php`, page `dashboard`, contrôleurs `app/Http/Controllers/Auth/*` et `Settings/*`, FormRequests `LoginRequest` et `ProfileUpdateRequest`, et leurs tests (`tests/Feature/Auth/*`, `tests/Feature/Settings/*`, `DashboardTest.php`). Ces routes contournaient l'API : `POST /register` créait un compte sans limiteur ni essai, `DELETE /settings/profile` supprimait le compte sans annuler l'abonnement ni révoquer le VPN. La page Inertia `/` répondait `500` en production (constaté le 2026-10-15, pas de build Vite dans le Dockerfile) ; elle redirige désormais vers le frontend. Régression couverte par `tests/Feature/Api/LegacyRoutesTest.php`. Les restes Inertia listés ci-dessus (paquets, middleware, `resources/js/`) demeurent (R-20).
 
 ## 11. Configuration (sans valeurs secrètes)
 

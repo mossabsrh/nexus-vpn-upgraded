@@ -34,9 +34,9 @@
     ├── app/Services/               ChargilyGateway (API Chargily, signature webhook, règles de statut)
     ├── app/Console/Commands/       subscriptions:expire, subscriptions:remind, payments:reconcile, vpn:peers
     ├── routes/api.php              50 endpoints ; routes/console.php (planification, admin:grant)
-    ├── routes/web.php, auth.php, settings.php   Starter kit Inertia hérité (+ redirections Chargily)
+    ├── routes/web.php              `/` → frontend + redirections Chargily (routes web héritées supprimées 2026-10-15)
     ├── database/                   migrations, seeders (PlansTableSeeder idempotent), factories
-    ├── tests/Feature/              110 tests (84 API réelle, 26 hérités)
+    ├── tests/Feature/              110 tests (API réelle et commandes ; tests hérités supprimés 2026-10-15)
     └── Dockerfile, docker/         Image Render (migrate --seed + schedule:work au démarrage)
 ```
 
@@ -59,8 +59,8 @@
 ## État actuel (2026-10-05)
 
 * Code inchangé depuis le commit initial `067e68d` ; documentation de référence complète (commits `e246b4d` → `4e9c025` + synthèse finale).
-* Tests : backend 130/130 réussis ; frontend : lint, types et build réussis ; aucun test frontend.
+* Tests : backend 110/110 réussis (2026-10-15, après suppression des 25 tests hérités ; en local, l'extension PHP `sodium` doit être activée) ; frontend : lint, types et build réussis ; aucun test frontend.
 * Exigences : 31 FR, 14 NFR (`02`) ; 22 fonctionnalités (`10`) ; 20 problèmes résolus (`14`) ; 12 décisions (`15`).
 * Historique : l'essentiel du durcissement et des fonctionnalités a été réalisé les 2026-10-04/05 juste avant le versionnement (`11` §2.5, `17`).
-* Risques ouverts principaux (`08` §11) : R-01 révocation VPN non propagée à la passerelle, R-02 base Render Free expirant après 30 jours, R-03 routes héritées actives, R-04 planificateur en veille, R-05 `TRUSTED_PROXIES="*"`.
+* Risques ouverts principaux (`08` §11) : R-01 révocation VPN non propagée à la passerelle, R-02 base Render Free expirant après 30 jours, R-04 planificateur en veille, R-05 IP du visiteur non connue de Laravel en production (proxys changeants, mesuré le 2026-10-15). R-03 (routes héritées) corrigé le 2026-10-15.
 * À produire : `03-architecture.md` ; diagrammes traduits en anglais + notation UML (sources `.mmd` dans `memoire-assets/diagrams/`) ; captures déjà générées (68 dans `memoire-assets/screenshots/`) ; réponses aux questions de `README.md`. Vérification pré-rédaction : `docs/memoire/{ground-truth,docs-audit,content-spec,gap-report}.md`.

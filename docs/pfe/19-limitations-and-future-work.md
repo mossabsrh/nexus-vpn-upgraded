@@ -13,7 +13,7 @@
 | L-05 | Fonctionnalités non implémentées (perspectives) : OpenVPN, kill switch, split tunneling, protection DNS dédiée, SSO/SAML, IP dédiée, SLA. **Retirées du site et des offres le 2026-10-11** ; elles ne sont donc plus annoncées. | `04-frontend.md` §13 |
 | L-06 | Pas de page de reçu/facture ni de facture PDF, alors que l'endpoint de reçu existe | `07-api.md` §13.1 |
 | L-07 | Renommage d'équipe sans interface ; les membres doivent déjà avoir un compte (pas d'invitation par e-mail) | `TeamController` |
-| L-08 | ✅ **Résolu (2026-10-06)** — Suppression de compte en libre-service ajoutée (`DELETE /api/account`, anonymisation + soft delete). Reste la route web héritée `DELETE /settings/profile` non modifiée (R-03). | `05-backend.md` §7.6, `07-api.md` §5 |
+| L-08 | ✅ **Résolu (2026-10-06)** — Suppression de compte en libre-service ajoutée (`DELETE /api/account`, anonymisation + soft delete). La route web héritée `DELETE /settings/profile` a été supprimée le 2026-10-15 (R-03). | `05-backend.md` §7.6, `07-api.md` §5 |
 | L-09 | Interface uniquement en anglais, sans internationalisation | `app/layout.tsx` (`lang="en"`) |
 | L-10 | Une seule devise (DZD) | Validation `currency in:DZD` |
 | L-11 | Paiement en mode test (`CHARGILY_MODE=test`) : aucun paiement réel validé | `render.yaml` |
@@ -35,8 +35,8 @@ Classées par priorité suggérée (⚠️ À VÉRIFIER : priorités de l'étudi
 
 1. **Automatiser la synchronisation de la passerelle WireGuard** (agent ou tâche qui applique `vpn:peers` + `wg syncconf`) — corrige R-01.
 2. **Hébergement de production** : base PostgreSQL payante avec sauvegardes, planificateur et worker séparés — corrige R-02, R-04, L-17.
-3. **Retirer le code hérité** (routes et pages Inertia, dépendances inutilisées) — corrige R-03, R-20, R-21.
-4. Restreindre `TRUSTED_PROXIES` et les origines CORS par environnement — R-05, R-11.
+3. **Retirer le reste du code hérité** (pages Inertia, middleware, dépendances inutilisées) — corrige R-20, R-21 (les routes web héritées ont été supprimées le 2026-10-15, R-03).
+4. Transmettre l'IP réelle du visiteur à Laravel (en-tête signé par un secret partagé entre `proxy.ts` et Laravel, `CF-Connecting-IP` pour les appels directs) et restreindre les origines CORS par environnement — R-05, R-11.
 5. Authentification à deux facteurs pour les administrateurs — R-07.
 6. Tests frontend (unitaires et de bout en bout, ex. parcours inscription → paiement) et CI exécutant tests, lint et build — R-08, L-16.
 7. ✅ Contenu marketing aligné sur les fonctionnalités réelles (2026-10-11, R-09). Reste, si souhaité, à implémenter la gestion multi-appareils (un pair par appareil) — L-04 ; les fonctionnalités retirées (OpenVPN, kill switch…) demeurent des perspectives — L-05.

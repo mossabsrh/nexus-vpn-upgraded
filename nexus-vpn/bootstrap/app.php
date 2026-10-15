@@ -20,6 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => EnsureUserIsAdmin::class,
         ]);
 
+        // There is no Laravel login page (the starter kit's web auth routes are not registered):
+        // API guests get a JSON 401, anything else is sent to the Next.js frontend.
+        $middleware->redirectGuestsTo(fn () => config('app.frontend_url'));
+
         // Requests arrive through the Next.js rewrite / hosting proxy; without this every
         // visitor shares the proxy's IP and per-IP rate limits would lock everyone out together.
         $trustedProxies = env('TRUSTED_PROXIES');

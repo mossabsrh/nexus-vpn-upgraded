@@ -199,14 +199,13 @@ Total : 50 endpoints sous `/api`, dont **3 non utilisés** par le frontend et 1 
 * `PUT /account/password` n'exige pas `password_confirmation` côté serveur (contrairement à l'inscription et à la réinitialisation) : la confirmation n'est vérifiée que dans le frontend.
 * Le frontend envoie toujours `plan_slug` au checkout ; `plan_id` (accepté par le backend) n'est pas utilisé.
 
-## 14. Routes web héritées (starter kit) — non utilisées par l'application réelle
+## 14. Routes web (hors API)
 
-Enregistrées dans `routes/web.php`, `routes/auth.php`, `routes/settings.php` (25 routes) ; **aucune n'est appelée par le frontend Next.js** (qui n'utilise que `/backend-api/*`). Voir `05-backend.md` §10.
+Seules 3 routes web restent enregistrées dans `routes/web.php` ; **aucune n'est appelée par le frontend Next.js** (qui n'utilise que `/backend-api/*`). Voir `05-backend.md` §6.2 et §10.
 
-| Routes | Contrôleurs | Remarque |
+| Routes | Contrôleur | Remarque |
 |---|---|---|
-| `GET /`, `GET dashboard` | Closures `Inertia::render` | Pages Inertia du starter kit |
-| `GET|POST register`, `GET|POST login`, `POST logout`, `GET|POST forgot-password`, `GET reset-password/{token}`, `POST reset-password` | `App\Http\Controllers\Auth\*` | Authentification web parallèle, encore active (voir risques dans `08-authentication-security.md`) |
-| `GET verify-email`, `GET verify-email/{id}/{hash}`, `POST email/verification-notification`, `GET|POST confirm-password` | `App\Http\Controllers\Auth\*` | Idem |
-| `settings` (redirection), `GET|PATCH|DELETE settings/profile`, `GET|PUT settings/password`, `GET settings/appearance` | `App\Http\Controllers\Settings\*` | Profil/suppression de compte hérités |
+| `GET /` | Closure | Redirige vers `FRONTEND_URL` |
 | `GET /payment/success`, `GET /payment/failed` | Closure | **Utilisées** pour la compatibilité : redirigent les anciens retours Chargily vers `FRONTEND_URL/payment/result?payment={id}` |
+
+Les 22 routes web d'authentification et de profil du starter kit (`register`, `login`, `logout`, `forgot-password`, `reset-password`, `verify-email`, `confirm-password`, `settings/*`, `dashboard`) ont été **supprimées le 2026-10-15** (R-03) : elles répondent désormais `404` (`tests/Feature/Api/LegacyRoutesTest.php`).

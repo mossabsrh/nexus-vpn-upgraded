@@ -3,11 +3,9 @@
 use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('welcome');
-})->name('home');
+// The site itself is the Next.js frontend; the Laravel domain only serves the API.
+Route::get('/', fn () => redirect()->away(config('app.frontend_url')))->name('home');
 
 /*
 | Legacy Chargily return URLs (checkouts created before the Next.js result page existed).
@@ -22,11 +20,8 @@ $redirectToPaymentResult = function (Request $request) {
 Route::get('/payment/success', $redirectToPaymentResult)->name('payment.success');
 Route::get('/payment/failed', $redirectToPaymentResult)->name('payment.failed');
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
-});
-
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+/*
+| The starter kit's web auth and settings routes (routes/auth.php, routes/settings.php) are
+| intentionally not registered: they bypassed the API's rate limits, trial rules and account
+| deletion logic. Accounts are managed only through the API (routes/api.php).
+*/

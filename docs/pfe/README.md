@@ -57,7 +57,7 @@ Toutes les mentions ⚠️ À VÉRIFIER des fichiers, reformulées en questions.
 
 ### `05-backend.md`
 - [ ] Existe-t-il un mécanisme (cron, agent) hors dépôt qui synchronise automatiquement les pairs WireGuard sur la passerelle ?
-- [ ] Les routes web héritées (`/register`, `/settings/profile`…) doivent-elles rester actives ? Que renvoie la page `/` du domaine Render en production ?
+- [x] Les routes web héritées (`/register`, `/settings/profile`…) doivent-elles rester actives ? → **Non** : supprimées le 2026-10-15 (R-03). La page `/` répondait `500` en production ; elle redirige désormais vers le frontend.
 - [ ] La configuration `services.frontend_url` est-elle utilisée quelque part hors du code (sinon : configuration morte) ?
 
 ### `06-database.md`
@@ -66,8 +66,8 @@ Toutes les mentions ⚠️ À VÉRIFIER des fichiers, reformulées en questions.
 - [ ] Une migration vers MySQL/MariaDB est-elle envisagée (l'index unique partiel n'y serait pas créé) ?
 
 ### `08-authentication-security.md`
-- [ ] Comment Render et Vercel transmettent-ils l'en-tête `X-Forwarded-For` (risque R-05 de contournement des limites par IP) ?
-- [ ] Quel est le comportement réel de `/` et des pages Inertia sur le domaine Render (R-20) ?
+- [x] Comment Render et Vercel transmettent-ils l'en-tête `X-Forwarded-For` (risque R-05) ? → **Mesuré le 2026-10-15** : Laravel voit des IP de proxys changeantes, pas l'IP du visiteur (détails dans `08` R-05). Correctif non retenu à ce stade.
+- [x] Quel est le comportement réel de `/` sur le domaine Render (R-20) ? → `500` constaté le 2026-10-15 ; `/` redirige désormais vers le frontend.
 
 ### `09-technologies-and-packages.md`
 - [ ] L'extension PHP `sodium` est-elle bien disponible dans l'image Docker de production ?
