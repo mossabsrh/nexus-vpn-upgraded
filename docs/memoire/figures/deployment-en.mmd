@@ -1,21 +1,31 @@
 flowchart TB
-    subgraph Repo["Git repository (monorepo)"]
-        direction TB
-        FR["/ (root)\nNext.js frontend\napp/, components/, hooks/, lib/, proxy.ts"]
-        BE["/nexus-vpn\nLaravel backend\napp/, routes/, database/, tests/"]
-        MOB["/mobile\nFlutter app [POSTPONED]"]
-        DOC["/docs\nmémoire documentation"]
+    U(["User's browser"])
+    subgraph GH["GitHub"]
+        direction LR
+        FR["/ (root)<br/>Next.js frontend"]
+        BE["/nexus-vpn<br/>Laravel API + Dockerfile"]
     end
-    subgraph Prod["Production"]
-        V["Vercel\n(Next.js build)"]
-        R["Render (Docker)\nmigrate --seed + schedule:work"]
-        PG[("Render PostgreSQL")]
-        BREVO["Brevo (HTTP e-mail API)"]
+    CI["GitHub Actions<br/>backend tests · frontend checks"]
+    subgraph VC["Vercel"]
+        V["Next.js app<br/>nexus-vpn-upgraded.vercel.app<br/>rewrite /backend-api/* → API /api/*"]
     end
-    FR -->|deploy| V
-    BE -->|Docker image| R
+    subgraph RD["Render (Frankfurt, free tier)"]
+        CF["Cloudflare edge<br/>TLS, in front of Render"]
+        R["Web service nexus-vpn-api (Docker)<br/>Apache + PHP 8.3 · /up health check<br/>start: migrate --seed, schedule:work"]
+        PG[("PostgreSQL<br/>nexus_vpn")]
+    end
+    CH["Chargily Pay v2<br/>(test mode)"]
+    MAIL["Transactional e-mail<br/>Brevo HTTP API (planned)"]
+
+    GH -.->|every push| CI
+    FR -->|push to main → build| V
+    BE -->|push to main → Docker build| R
+    U -->|HTTPS, same origin| V
+    V -->|HTTPS| CF
+    CF --> R
     R --> PG
-    R -->|transactional e-mail| BREVO
-    V -->|rewrite /backend-api| R
-    class MOB postponed
-    classDef postponed stroke-dasharray: 6 4, opacity:0.55
+    U -->|hosted checkout| CH
+    CH -->|signed webhook| R
+    R -.-> MAIL
+    class MAIL planned
+    classDef planned stroke-dasharray: 6 4, opacity:0.6

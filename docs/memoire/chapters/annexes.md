@@ -51,7 +51,7 @@ The application is configured entirely through environment variables; the table 
 
 ## Appendix C — Summary of the automated test suite
 
-The back end is covered by **131 tests (508 assertions)** that run in about fourteen seconds on an in-memory SQLite database. The breakdown by area is given in the body of the thesis (Table IV.3): authentication, account and security (47); payments and webhooks (41); subscriptions and VPN provisioning (11); mobile token API (9); administration and billing (19); platform and data integrity (4). The automated front-end test suite is future work; Playwright is currently used to capture the interface screenshots.
+The back end is covered by **110 tests (460 assertions)** that run in about thirty seconds on an in-memory SQLite database. The breakdown by area is given in the body of the thesis (Table IV.3): authentication, account and security (28); payments and webhooks (41); subscriptions and VPN provisioning (11); mobile token API (9); administration and billing (19); platform and data integrity (2). The automated front-end test suite is future work; Playwright is currently used to capture the interface screenshots.
 
 *Source: prepared by the authors, from `php artisan test`.*
 

@@ -22,35 +22,35 @@
 | Figure III.14b : Entity-relationship diagram (teams, support, audit and mobile tokens) | 42 |
 | Figure III.15 : State diagram of the subscription lifecycle | 46 |
 | Figure III.16 : Gantt chart of the project | 48 |
-| Figure IV.1 : Main technologies of the portal | 55 |
-| Figure IV.2 : Public home page: navigation bar and hero | 59 |
-| Figure IV.3 : Home page: features section | 59 |
-| Figure IV.4 : Home page: the network section (private routing over WireGuard) | 60 |
-| Figure IV.5 : Home page: approved customer testimonials | 60 |
-| Figure IV.6 : Home page: pricing plans (in Algerian dinars) | 61 |
-| Figure IV.7 : Home page: Team-plan contact form | 61 |
-| Figure IV.8 : Home page: footer | 62 |
-| Figure IV.9 : Authentication: sign-in dialog | 62 |
-| Figure IV.10 : Authentication: sign-up dialog (with plan selection) | 63 |
-| Figure IV.11 : Authentication: server-side validation error | 64 |
-| Figure IV.12 : Authentication: forgotten-password request | 65 |
-| Figure IV.13 : Authentication: confirmation message | 65 |
-| Figure IV.14 : Client dashboard: subscription status and VPN access | 66 |
-| Figure IV.15 : Client dashboard: empty state (no active subscription) | 66 |
-| Figure IV.16 : Client dashboard: failed-payment state | 67 |
-| Figure IV.17 : Checkout: payment dialog before redirection to Chargily | 67 |
-| Figure IV.18 : Billing: payment receipt dialog | 68 |
-| Figure IV.19 : Account settings: e-mail, password and account deletion | 69 |
-| Figure IV.20 : Client dashboard: team-member management (team owner) | 69 |
-| Figure IV.21 : Administration: overview | 70 |
-| Figure IV.22 : Administration: user accounts | 70 |
-| Figure IV.23 : Administration: offers (plans) management | 71 |
-| Figure IV.24 : Administration: subscriptions | 71 |
-| Figure IV.25 : Administration: payments and refunds | 72 |
-| Figure IV.26 : Administration: analytics (custom-built charts) | 72 |
-| Figure IV.27 : Administration: audit log | 73 |
-| Figure IV.28 : Support: testimonial moderation | 73 |
-| Figure IV.29 : Support: contact-request inbox | 74 |
-| Figure IV.30 : Responsive web: home page at phone width | 74 |
-| Figure IV.31 : Responsive web: dashboard at phone width | 75 |
-| Figure IV.32 : Deployment architecture | 81 |
+| Figure IV.1 : Main technologies of the portal | 54 |
+| Figure IV.2 : Public home page: navigation bar and hero | 58 |
+| Figure IV.3 : Home page: features section | 58 |
+| Figure IV.4 : Home page: the network section (private routing over WireGuard) | 59 |
+| Figure IV.5 : Home page: approved customer testimonials | 59 |
+| Figure IV.6 : Home page: pricing plans (in Algerian dinars) | 60 |
+| Figure IV.7 : Home page: Team-plan contact form | 60 |
+| Figure IV.8 : Home page: footer | 61 |
+| Figure IV.9 : Authentication: sign-in dialog | 61 |
+| Figure IV.10 : Authentication: sign-up dialog (with plan selection) | 62 |
+| Figure IV.11 : Authentication: server-side validation error | 63 |
+| Figure IV.12 : Authentication: forgotten-password request | 64 |
+| Figure IV.13 : Authentication: confirmation message | 64 |
+| Figure IV.14 : Client dashboard: subscription status and VPN access | 65 |
+| Figure IV.15 : Client dashboard: empty state (no active subscription) | 65 |
+| Figure IV.16 : Client dashboard: failed-payment state | 66 |
+| Figure IV.17 : Checkout: payment dialog before redirection to Chargily | 66 |
+| Figure IV.18 : Billing: payment receipt dialog | 67 |
+| Figure IV.19 : Account settings: e-mail, password and account deletion | 68 |
+| Figure IV.20 : Client dashboard: team-member management (team owner) | 68 |
+| Figure IV.21 : Administration: overview | 69 |
+| Figure IV.22 : Administration: user accounts | 69 |
+| Figure IV.23 : Administration: offers (plans) management | 70 |
+| Figure IV.24 : Administration: subscriptions | 70 |
+| Figure IV.25 : Administration: payments and refunds | 71 |
+| Figure IV.26 : Administration: analytics (custom-built charts) | 71 |
+| Figure IV.27 : Administration: audit log | 72 |
+| Figure IV.28 : Support: testimonial moderation | 72 |
+| Figure IV.29 : Support: contact-request inbox | 73 |
+| Figure IV.30 : Responsive web: home page at phone width | 73 |
+| Figure IV.31 : Responsive web: dashboard at phone width | 74 |
+| Figure IV.32 : Deployment architecture | 80 |

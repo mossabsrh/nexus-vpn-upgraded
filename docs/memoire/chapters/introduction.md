@@ -20,7 +20,7 @@ The objective of this work is to design and develop a secure web portal that cov
 
 ## Method followed
 
-The work follows the methodology required for the BTS thesis and the structure agreed with the supervisor. It begins with the study of the host organisation and its existing system (Chapter I), continues with the theoretical background needed to understand the problem (Chapter II), then moves to the analysis and design of the solution using the Unified Modeling Language (Chapter III), and finally to its implementation, testing and planned deployment (Chapter IV). Throughout, the design is grounded in the real, working application rather than in an idealised specification.
+The work follows the methodology required for the BTS thesis and the structure agreed with the supervisor. It begins with the study of the host organisation and its existing system (Chapter I), continues with the theoretical background needed to understand the problem (Chapter II), then moves to the analysis and design of the solution using the Unified Modeling Language (Chapter III), and finally to its implementation, testing and deployment (Chapter IV). Throughout, the design is grounded in the real, working application rather than in an idealised specification.
 
 ## Structure of the thesis
 

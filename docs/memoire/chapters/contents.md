@@ -11,7 +11,7 @@
 | Chapter II — Overview of VPN Services and E-commerce | 7 |
 | Chapter III — System Analysis and Design | 19 |
 | Chapter IV — Implementation and Deployment | 50 |
-| General Conclusion | 83 |
-| Bibliography | 86 |
-| Appendices | 89 |
-| Table of Contents (detailed) | 93 |
+| General Conclusion | 86 |
+| Bibliography | 89 |
+| Appendices | 92 |
+| Table of Contents (detailed) | 96 |

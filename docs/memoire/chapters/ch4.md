@@ -2,9 +2,9 @@
 
 ## Introduction
 
-The previous chapter translated the requirements into a design — actors, use cases, data model and business rules. This chapter turns that design into a working system and prepares its deployment. It presents, in order, the technologies and tools chosen for the project (IV.1), the overall software architecture (IV.2), the functional modules that make up the portal (IV.3), a walk-through of the user interface (IV.4), the implementation of the most critical components with excerpts from the source code (IV.5), the quality-assurance and testing work (IV.6), and finally the production environment, continuous integration and monitoring (IV.7).
+The previous chapter translated the requirements into a design — actors, use cases, data model and business rules. This chapter turns that design into a working system and prepares its deployment. It presents, in order, the technologies and tools chosen for the project (IV.1), the overall software architecture (IV.2), the functional modules that make up the portal (IV.3), a walk-through of the user interface (IV.4), the implementation of the most critical components with excerpts from the source code (IV.5), the quality-assurance and testing work (IV.6), and finally the deployment: production environment, request flow, release process, continuous integration, live verification, problems met and monitoring (IV.7).
 
-The chapter is precise about the state of the system. The portal is fully implemented and covered by an automated backend test suite; it is prepared for deployment on free hosting tiers but has not yet been operated in production. Wherever a claim would require the live site (security scans, load tests, production screenshots), the chapter states what can be shown from the code and configuration today and marks the remaining evidence as a clearly identified item of future work.
+The chapter is precise about the state of the system. The portal is fully implemented and covered by an automated backend test suite; it is deployed on free hosting tiers (Vercel and Render) and was checked against its public addresses. Wherever a claim would require evidence not yet captured (security scans, load tests, dashboard screenshots), the chapter states what can be shown today and marks the remaining evidence as a clearly identified item of future work.
 
 ## IV.1 Technologies and Tools
 
@@ -54,7 +54,7 @@ Multi-factor authentication is **not** implemented and is listed as future work;
 
 ![](../figures/logos/png/vercel.png){height=0.6cm} **Vercel** — the hosting platform for the Next.js front end. **Render** — the hosting platform for the backend container and the managed PostgreSQL database. **Brevo** is the planned production e-mail service, to be used over its HTTP API (Gmail SMTP in development).
 
-![](../figures/logos/png/phpunit.png){height=0.6cm} **PHPUnit**[^phpunit] 11.5.55 — the back-end test framework (131 tests, IV.6).
+![](../figures/logos/png/phpunit.png){height=0.6cm} **PHPUnit**[^phpunit] 11.5.55 — the back-end test framework (110 tests, IV.6).
 
 ![](../figures/logos/png/eslint.png){height=0.6cm} **ESLint 9.39** with **Laravel Pint 1.29** — static analysis and code style for the front end and the back end.
 
@@ -527,19 +527,19 @@ The private key is stored with Eloquent's `encrypted` cast and hidden from seria
 
 ### IV.6.1 Automated tests
 
-The back end is covered by an automated test suite of **131 tests (508 assertions)** that runs in about fourteen seconds on an in-memory SQLite database. The tests are feature tests: each one drives the real HTTP endpoints and asserts on the response and the database state. Table IV.3 groups them by area; the same breakdown is given in Appendix C.
+The back end is covered by an automated test suite of **110 tests (460 assertions)** that runs in about thirty seconds on an in-memory SQLite database. The tests are feature tests: each one drives the real HTTP endpoints and asserts on the response and the database state. Table IV.3 groups them by area; the same breakdown is given in Appendix C.
 
 | Area | Tests | What it verifies |
 |---|---|---|
-| Authentication, account and security | 47 | Registration, login, logout, e-mail verification, password reset, account lockout, security headers, account deletion and anonymisation |
+| Authentication, account and security | 28 | Registration, login, logout, e-mail verification, password reset, account lockout, security headers, account deletion and anonymisation, removed starter-kit routes answering 404 |
 | Payments and webhooks | 41 | Checkout, webhook signature and idempotency, amount/currency checks, reconciliation of stale payments, receipts |
 | Subscriptions and VPN provisioning | 11 | Trial, renewal, cancellation, scheduled expiry, WireGuard peer issue and distinct tunnel addresses |
 | Mobile token API (Sanctum) | 9 | Token issue, protected routes, guard separation, token revocation |
 | Administration and billing | 19 | Admin-only access, statistics, refunds, plan deactivation, moderation, team subscriptions, contact requests |
-| Platform and data integrity | 4 | Dashboard access control, seeder idempotency, scaffold test |
-| **Total** | **131** | 508 assertions, ~14 s |
+| Platform and data integrity | 2 | Demo-data seeder, scaffold test |
+| **Total** | **110** | 460 assertions, ~30 s |
 
-**Table IV.3 — Backend automated test suite.** *Source: prepared by the authors, from `php artisan test`.*
+**Table IV.3 — Backend automated test suite.** *Source: prepared by the authors, from `php artisan test` (15/10/2026).*
 
 Automated **frontend** testing is not yet in place and is listed as future work; Playwright is currently used to capture the interface screenshots rather than to assert on behaviour.
 
@@ -557,45 +557,121 @@ The security measures of IV.5 are covered by the automated test suite and were a
 
 **Table IV.4 — Security checks and their evidence.** *Source: prepared by the authors.*
 
-> **Future work — live security scan.** Online scans of the deployed site (security-header grade, TLS configuration, and a re-check of the 419/429/403 behaviours against the public URL) will be run and reported here once the site is deployed.
+> **Future work — live security scan.** Online scans of the deployed site (security-header grade, TLS configuration, and a re-check of the 419/429/403 behaviours against the public URL) remain to be run and reported here.
 
 ### IV.6.3 Performance testing
 
 On the list endpoints the back end eager-loads related models (for example the administration payment listing loads each payment's user and subscription in the same query) to avoid N+1 query patterns. A full performance assessment, however, requires the live site and is left as future work.
 
-> **Future work — live performance test.** A Lighthouse report on the deployed front end and a small load test against a public endpoint will be run and reported here once the site is deployed, together with the cold-start behaviour of the free hosting tier.
+> **Future work — live performance test.** A Lighthouse report on the deployed front end and a small load test against a public endpoint will be run against the public URLs and reported here, together with the cold-start behaviour of the free hosting tier.
 
 ## IV.7 Deployment
 
+This section describes how the portal is deployed and operated in production: the hosting services and why they were chosen (IV.7.1), the path a request follows from the browser to the database (IV.7.2), how a new version reaches production (IV.7.3), the continuous-integration pipeline (IV.7.4), the checks run against the live system (IV.7.5), the problems met while deploying and how they were solved (IV.7.6), and finally monitoring and the limits of the hosting plan (IV.7.7).
+
 ### IV.7.1 Production environment
 
-The project is a monorepo designed to deploy as two services. The Next.js front end is configured for **Vercel**; the Laravel API is containerised with **Docker** (base image `php:8.3-apache-bookworm`) and targets **Render** as the `nexus-vpn-api` service, alongside a managed **PostgreSQL** database, both set to Render's Frankfurt region on the free tier. These choices are declared in `render.yaml` and the Dockerfile; the system has not yet been deployed to production. The application is configured entirely through environment variables, whose names are listed in Appendix B. Figure IV.32 shows the intended flow from the repository to production.
+The project is a monorepo that deploys as **two independent services and one database**. The Next.js front end runs on **Vercel**; the Laravel API is packaged as a **Docker** image and runs on **Render** as the web service `nexus-vpn-api`, next to a managed **PostgreSQL** database. Both Render resources are in the Frankfurt region, on the free tier. Table IV.5 lists the production components and Figure IV.32 shows how they fit together.
+
+| Component | Host and plan | Address / identifier | Role |
+|---|---|---|---|
+| Front end | Vercel | `https://nexus-vpn-upgraded.vercel.app` | Serves the Next.js pages and forwards every `/backend-api/*` call to the API |
+| API | Render web service (Docker), Frankfurt, free | `https://nexus-vpn-api.onrender.com` | Laravel 12 on Apache and PHP 8.3; JSON API under `/api/*` |
+| Database | Render PostgreSQL, Frankfurt, free | database `nexus_vpn` | All application data (users, plans, subscriptions, payments, VPN credentials, audit log) |
+| Payment | Chargily Pay v2, test mode | — | Hosted checkout page and signed webhook back to the API |
+| Source and CI | GitHub + GitHub Actions | repository `nexus-vpn-upgraded`, branch `main` | Source of every deployment; runs the automated checks on each push |
+
+**Table IV.5 — Production components.** *Source: prepared by the authors, from `render.yaml`, `next.config.mjs` and the hosting dashboards.*
 
 ![Deployment architecture](../figures/deployment-en.png){width=14cm}
 
 **Figure IV.32 — Deployment architecture.** *Source: prepared by the authors.*
 
-The service is described declaratively in `render.yaml` (region, health check on `/up`, environment variables, a generated application-key secret and the secrets entered by hand in the dashboard). On each container start, the entry point reconstructs the application key, runs `php artisan migrate --force --seed`, and launches the scheduler in the background before serving the application. In production, transactional e-mail is planned to be sent through the **Brevo** HTTP API because Render's free tier blocks outbound SMTP; this HTTP transport is not yet implemented in the code.
+The split follows the architecture of IV.2: each side is hosted where it runs best. Vercel builds and serves Next.js without any server to manage. The Laravel API needs a long-running PHP process, a scheduler and a relational database, which Render provides from a single declarative file. Both hosts offer a free tier and redeploy automatically from GitHub, which suits a student project with no budget. The cost of this choice — sleeping services and an expiring database — is discussed in IV.7.7.
 
-The free hosting tier has real limits worth stating plainly: the web service sleeps after fifteen minutes of inactivity and takes about a minute to wake, and the free PostgreSQL database expires thirty days after creation. The portal's access control remains correct during sleep because it is based on the stored period end, but scheduled e-mails and revocations are delayed until the service wakes.
+### IV.7.2 Request flow in production
 
-> **Future work — live deployment evidence.** The Render and Vercel dashboards, the live health check, the Chargily webhook configuration, and an end-to-end run (payment, verification e-mail, `.conf` import into the WireGuard application) will be captured and added here once the project is deployed. No live VPN tunnel is operated by the project itself: the gateway values are supplied so that a real, importable configuration file is produced.
+**Same-origin API calls.** The browser only ever talks to the Vercel domain. The front end calls relative paths such as `/backend-api/auth/login`; a rewrite rule in `next.config.mjs` forwards them to the Render service's `/api/*` routes. Because the browser sees a single origin, the session and CSRF cookies issued by Laravel are ordinary first-party cookies (`Secure`, `SameSite=Lax`, the session cookie also `HttpOnly`), no cross-origin (CORS) request is needed, and the front end's Content Security Policy can restrict network calls to its own origin (`connect-src 'self'`).
 
-### IV.7.2 Continuous integration
+**Authentication.** Before any state-changing request, the front end obtains a CSRF token from `GET /backend-api/csrf-cookie` and sends it back in the `X-XSRF-TOKEN` header; if the token is rejected as expired (HTTP 419), it fetches a new one and retries once (IV.5.2).
 
-Continuous integration is provided by **GitHub Actions**[^githubactions]: on every push and pull request, one workflow installs the backend dependencies and runs the full PHPUnit suite on PHP 8.2 and 8.3, and a second workflow installs the frontend dependencies and runs the linter, the TypeScript type-check and the production build. The workflows are defined at the repository root so that GitHub runs them; hosting-side continuous deployment is automatic, as Render and Vercel rebuild each service on a push to the main branch.
+**Edge and TLS.** HTTPS is terminated by the hosts: by Vercel for the front end and, for the API, by the Cloudflare edge that Render places in front of its services (visible in the `Server: cloudflare` response header). Requests therefore reach Laravel through several proxies, which is why the application must be told which proxies to trust (`TRUSTED_PROXIES`, see IV.7.6).
 
-> **Future work — live CI/CD evidence.** A screenshot of a green Actions run and of the automatic Render/Vercel deployments will be added once the repository is pushed to GitHub.
+**Payment.** For a payment, the browser is redirected to Chargily's hosted checkout. Chargily then calls the API's webhook directly (`POST /api/webhooks/chargily`, HMAC-signed and outside the session/CSRF group), and the user returns to the front end's `/payment/result` page, which asks the API for the payment's verified status.
 
-### IV.7.3 Monitoring and logging
+### IV.7.3 Deployment process and configuration
 
-In production the application logs to standard error, which Render and Vercel collect and display; the `/up` health endpoint lets Render detect and restart an unhealthy container; and the in-application **audit log** records every security- and billing-relevant event. An optional free uptime monitor on `/up` can be added to detect outages and to keep the free service awake.
+**Render (API and database).** The API service and its database are declared in `render.yaml` (a Render *Blueprint*): Docker runtime, root directory `nexus-vpn/`, region, plan, the `/up` health check, and every environment variable. Non-secret values are written in the file; the application key is generated by Render (`generateValue`); the database URL is injected from the database resource; and the real secrets (Chargily secret key, mail credentials, WireGuard gateway key and endpoint) are marked `sync: false` and typed by hand in the Render dashboard, so they never appear in the repository. The names of all variables are listed in Appendix B.
+
+The Docker image starts from `php:8.3-apache-bookworm`, installs the PHP extensions the application needs (`pdo_pgsql`, `bcmath`, `mbstring`, `zip`), runs `composer install --no-dev --optimize-autoloader`, and points Apache at Laravel's `public/` directory. Its entry point performs four steps each time the container starts:
+
+1. rebuild `APP_KEY` from the secret generated by Render;
+2. run `php artisan migrate --force --seed` (the migrations are additive and the seeders idempotent, so this is safe on every start);
+3. start the Laravel scheduler (`schedule:work`) in the background — subscription expiry, VPN revocation, renewal reminders and payment reconciliation;
+4. make Apache listen on the port given by Render, then serve requests.
+
+**Vercel (front end).** Vercel builds the Next.js application with `pnpm build`. The only required setting is `NEXT_PUBLIC_API_URL`, the public address of the Render service; `next.config.mjs` deliberately stops the build when it is missing on Vercel, so a misconfigured deployment fails visibly instead of producing a site that cannot reach its API.
+
+**Releasing a new version.** Both hosts are connected to the GitHub repository and rebuild their service automatically when commits are pushed to `main`: Vercel rebuilds the front end, and Render rebuilds the Docker image and restarts the container, which applies any new migrations on start-up. Each host keeps serving the previous version until the new build succeeds.
+
+### IV.7.4 Continuous integration
+
+Continuous integration is provided by **GitHub Actions**[^githubactions]. Two workflows, defined at the repository root, run on every push and pull request to `main`:
+
+* **Backend tests** — installs the Composer dependencies and runs the complete PHPUnit suite on PHP 8.2 and on PHP 8.3, the version used in the production image;
+* **Frontend checks** — installs the pnpm dependencies and runs the linter, the TypeScript type-check and the production build.
+
+The first run of these workflows on GitHub (13/10/2026, commit `07a2307`) gave a useful result: the frontend checks passed, but the backend tests failed on both PHP versions. Reproducing the workflow's steps on a fresh clone showed the cause: tests inherited from the Laravel starter kit rendered Inertia pages, which require a compiled front-end asset manifest that is absent on a clean CI runner (`ViteManifestNotFoundException`). Those tests covered routes that the portal does not use; they were removed together with the routes themselves (IV.7.6), and the same clean-runner procedure then passed with **110 tests and 460 assertions** (15/10/2026). CI thus did its job: it exposed a problem that local runs had hidden.
+
+### IV.7.5 Verification of the live system
+
+Table IV.6 records the checks run against the public addresses, with the result actually observed. The login checks used invented e-mail addresses, so no real account was involved.
+
+| Check (date) | Request | Observed result |
+|---|---|---|
+| API health (13/10/2026) | `GET https://nexus-vpn-api.onrender.com/up` | 200 OK; **14.5 s** for the first request after a period of inactivity (cold start), about **0.3 s** once awake |
+| Database reachable (13/10/2026) | `GET /backend-api/pricing` and `/backend-api/testimonials` via Vercel | 200 OK with the plans and approved testimonials stored in PostgreSQL |
+| Session and CSRF cookies (13/10/2026) | `GET /backend-api/csrf-cookie` via Vercel | 204; `XSRF-TOKEN` and `laravel_session` set with `Secure` and `SameSite=Lax` |
+| Login rejected cleanly (13/10/2026) | `POST /backend-api/auth/login`, wrong credentials | 401 "Invalid email or password." |
+| Expired CSRF token recovered (13/10/2026) | Same login with a stale `XSRF-TOKEN`, then the front end's retry | 419 on the first attempt, 401 (normal rejection) after the token refresh |
+| Brute-force lockout (15/10/2026) | Eight failed logins for one e-mail | 401 five times, then **429 Too Many Requests** |
+| Back-end root page (15/10/2026) | `GET https://nexus-vpn-api.onrender.com/` | 500 — corrected in the code (IV.7.6) |
+
+**Table IV.6 — Checks run against the live system.** *Source: prepared by the authors, from `curl` runs against the public URLs.*
+
+> **Future work — dashboard screenshots and end-to-end run.** Screenshots of the Render and Vercel dashboards, of the Chargily webhook setting, and an end-to-end run on the live site (test payment, verification e-mail, `.conf` import into the WireGuard application) remain to be captured by the authors. No live VPN tunnel is operated by the project itself: the gateway values are supplied so that a real, importable configuration file is produced.
+
+### IV.7.6 Problems encountered during deployment
+
+Deploying the portal surfaced problems that never appeared on a developer machine. Table IV.7 summarises them; each is documented in detail in the project's technical documentation (problem, investigation, cause, solution, verification).
+
+| Problem | Cause | Solution | Result |
+|---|---|---|---|
+| Login on the live site failed with "CSRF token mismatch" | Vercel was still serving the front end of 04/10/2026: the project had lost its connection to the GitHub repository, so no later push had been deployed. That old version did not refresh an expired CSRF token, and browsers still held a token from before the back end was redeployed | Reconnected the repository to the Vercel project and redeployed `main`; no code change was needed, as the current code already refreshed the token | Live files checked: the 419 → refresh → retry logic is present and a stale token is recovered (Table IV.6) |
+| Backend CI failed on its first run | Starter-kit tests needed a compiled asset manifest absent on a clean runner (IV.7.4) | Removed the unused starter-kit routes, controllers and tests | 110 tests pass on a clean runner |
+| Unused starter-kit routes reachable on the API domain (a sign-up route without rate limit, an account deletion that did not cancel the subscription), and `/` returning 500 | The API was generated from a starter kit whose web pages had never been removed | Routes removed (they now answer 404); `/` redirects to the front end; regression tests added | 110/110 tests; to be confirmed on the live site after the next push |
+| The API does not see the visitor's real IP address | Requests pass through several proxies (Vercel, Cloudflare); with `TRUSTED_PROXIES="*"` Laravel takes an address that changes between requests. Measured on 15/10/2026: one client's requests were counted in several different rate-limit buckets | Documented as a known limitation; the per-e-mail lockout still applies (Table IV.6). Planned fix: a client-IP header signed with a secret shared by the front end and the API | Open (future work) |
+
+**Table IV.7 — Problems encountered during deployment.** *Source: prepared by the authors.*
+
+The main lesson is methodological: when production behaves differently from the code, the first thing to check is **which version is actually deployed** — the files served by the host, its list of deployments and the status of the commit on GitHub — before debugging the code itself.
+
+### IV.7.7 Monitoring, logging and hosting limits
+
+In production the application writes its logs to standard error (`LOG_CHANNEL=stderr`), which Render and Vercel collect and display in their dashboards; the `/up` health endpoint lets Render detect and restart an unhealthy container; and the in-application **audit log** records every security- and billing-relevant event (IV.5). An optional free uptime monitor on `/up` could alert on outages and keep the service awake.
+
+The free hosting tier has real limits worth stating plainly:
+
+* **Sleep.** The API stops after fifteen minutes without traffic; the next request wakes it, which took 14.5 s in our measurement. Access control stays correct during sleep because it compares the stored period end with the current time on every request, but scheduled tasks (expiry e-mails, VPN revocation, payment reconciliation) only run while the service is awake.
+* **Database lifetime.** A free Render PostgreSQL database expires thirty days after its creation and is deleted after a further fourteen-day grace period. Before real use, the database must be moved to a paid plan or backed up and recreated.
+* **E-mail.** Render's free tier blocks outbound SMTP. Transactional e-mail in production is therefore planned through the **Brevo** HTTP API (dashed in Figure IV.32); this transport is not yet implemented, so e-mails sent by the live site are not claimed here.
+* **Payments.** Chargily runs in **test mode**: the full payment flow works, but no real money is collected until the live keys are configured.
 
 ## Conclusion
 
-This chapter presented the implementation and the planned deployment of the portal. It set out the technology stack and justified a decoupled Next.js / Laravel architecture built as a modular monolith; it described the nine functional modules and walked through the client, administration and support interfaces; and it examined the critical components — security headers and rate limiting, session and Sanctum authentication, the HMAC-signed and idempotent payment flow, and the WireGuard provisioning built on Curve25519 — with excerpts from the source code. Quality is backed by an automated suite of 131 backend tests, complemented by documented manual security checks.
+This chapter presented the implementation and the deployment of the portal. It set out the technology stack and justified a decoupled Next.js / Laravel architecture built as a modular monolith; it described the nine functional modules and walked through the client, administration and support interfaces; and it examined the critical components — security headers and rate limiting, session and Sanctum authentication, the HMAC-signed and idempotent payment flow, and the WireGuard provisioning built on Curve25519 — with excerpts from the source code. Quality is backed by an automated suite of 110 backend tests run by continuous integration, complemented by documented manual security checks. Finally, it described the production deployment on Vercel and Render, the release process, the checks run against the live system and the problems met while deploying, with their solutions.
 
-The chapter has also been explicit about the system's boundaries: the parts that depend on a running deployment — live security scans, performance and load tests, production dashboards and an end-to-end payment-and-tunnel demonstration — are prepared from the configuration and left as clearly marked items of future work, as are the native mobile client and the live VPN gateway operated by the network team. Together these define exactly what remains to be captured once the site is deployed. The general conclusion that follows draws together the results of the whole project and its perspectives.
+The chapter has also been explicit about the system's boundaries: live security scans, performance and load tests, dashboard screenshots and an end-to-end payment-and-tunnel demonstration are left as clearly marked items of future work, as are the forwarding of the visitor's real IP address to the API, transactional e-mail in production, the native mobile client and the live VPN gateway operated by the network team. The general conclusion that follows draws together the results of the whole project and its perspectives.
 
 ---
 

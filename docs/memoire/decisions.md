@@ -3,7 +3,7 @@
 > **Read this file first** at the start of every mémoire session (rule also in `CLAUDE.md`).
 > Work plan: [`plan.md`](plan.md) (task-based). Mobile app analysis: [`mobile-facts.md`](mobile-facts.md).
 > Language of this file: simple English (our discussion language). Project docs in `docs/pfe/` stay in French.
-> Updated after every decision. Last update: 2026-10-12 (title + problem statement chosen, hypotheses answered, abstracts, automatic list page numbers).
+> Updated after every decision. Last update: 2026-10-18 (deployment section IV.7 written from the live system; status updated).
 
 ## 0. Status in one look
 
@@ -11,8 +11,8 @@
 |---|---|
 | Phase | **Writing / assembly.** Ch II–IV written and revised (Ch II approved); cover, front matter, abstracts (AR/FR/EN), introduction, problem statement (Option A), conclusion (hypotheses answered, all *partially confirmed*), bibliography and appendices A–E drafted. Full build: `bash docs/memoire/build/build.sh full` (103 pages; list page numbers filled automatically). **Chapter I** waits for the EADN visit. Open items: `placeholders.md`. |
 | Deadline | **Submit the mémoire on 15/10/2026.** Defense date: unknown. |
-| Website | Finished and audited; **131 backend tests / 508 assertions** pass; lint/tsc/build pass; CI workflows written (not yet run on GitHub). |
-| Deployment | **NOT deployed yet** — future work (P6–P8, P12 in `placeholders.md`). |
+| Website | Finished and audited; **110 backend tests / 460 assertions** pass (2026-10-15, after removing the starter-kit routes and their tests, R-03); lint/tsc/build pass; CI runs on GitHub (first run 13/10: frontend ✅, backend ❌ from the starter-kit tests — fixed, passes on a clean runner). |
+| Deployment | **Deployed and live**: front end `https://nexus-vpn-upgraded.vercel.app` (Vercel), API `https://nexus-vpn-api.onrender.com` + PostgreSQL (Render, Frankfurt, free). Written up in Ch IV §IV.7 (2026-10-18). Remaining evidence = dashboard screenshots, Chargily webhook setting, end-to-end run (P8, P12), live scans (P6, P7). E-mail in production not wired (Brevo, D-17). |
 | Mobile app | ⏸️ **POSTPONED (D-16, 2026-10-09)** — we build the Flutter app from our own project **later** (Q-23 re-opened). Not dropped. Backend Sanctum token auth is **done, tested, committed** and stays; the Flutter **auth** code is written and committed in `mobile/`. Chapters are written web-first with marked mobile placeholders. |
 | Host organization | EADN (Entreprise d'Appui au Développement du Numérique). Chapter I information still to collect (§9). |
 | Language | English. |
@@ -254,3 +254,4 @@ Ask for **permission** to use each item; hide personal data (names, phone number
 | 2026-10-10 | Pre-chapter verification underway. **Step 1** done ([`ground-truth.md`](ground-truth.md), committed). **Step 2** done ([`docs-audit.md`](docs-audit.md)): existing docs ~95% accurate; fixes listed for Step 5 (test counts 110/121→130, add Sanctum to 06/09/18-glossary, Brevo note, `payments:reconcile` in 13, realign 20-mapping, diagrams FR→EN). **Brevo e-mail recorded (D-17/Q-22).** |
 | 2026-10-10 | **Steps 3–6 done (verification complete).** Added `content-spec.md`, `gap-report.md`, `ch3-design-material.md` (role matrix, 10 use-case tables, data dictionary EN, relational model, business rules), `ch2-sources.md` (theory sources + verified Algerian laws 18-05/18-07), English diagrams `figures/*`. Corrected `docs/pfe` (130 tests, Sanctum, Brevo). Servers stopped, **dev DB intact (13 users/1 admin/11 demo)**, **no app code changed**. Remaining = write chapters (web-first), Chapter I (EADN visit), deployment + live evidence, render diagrams. **Ready to start Chapter II on the student's go.** |
 | 2026-10-12 | §0 status brought up to date. D-18 (title option 2, problem statement Option A); Q-10/Q-13 resolved. Abstracts written; list page numbers automated in the build. |
+| 2026-10-18 | Status: the portal **is deployed** (Vercel + Render). Ch IV §IV.7 rewritten from the live system (Tables IV.5–IV.7, new Figure IV.32); test counts 110/460 across Ch IV, Appendix C, conclusion, abstracts. Build made portable: `build.sh` finds pandoc, uses Word (COM, `build/docx2pdf.ps1`) when LibreOffice is absent, and takes `PYTHON=` (venv with python-docx, pymupdf, matplotlib, lxml). |

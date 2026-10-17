@@ -32,7 +32,10 @@
 | Table III.25 : Data dictionary of the database | 42 |
 | Table III.26 : Relationships and cardinalities | 47 |
 | Table III.27 : Phases whose dates are to be confirmed | 48 |
-| Table IV.1 : Logical layers of the system | 56 |
+| Table IV.1 : Logical layers of the system | 55 |
 | Table IV.2 : Functional modules and their main endpoints | 57 |
-| Table IV.3 : Backend automated test suite | 79 |
-| Table IV.4 : Security checks and their evidence | 80 |
+| Table IV.3 : Backend automated test suite | 78 |
+| Table IV.4 : Security checks and their evidence | 78 |
+| Table IV.5 : Production components | 79 |
+| Table IV.6 : Checks run against the live system | 82 |
+| Table IV.7 : Problems encountered during deployment | 83 |
