@@ -54,7 +54,7 @@ Multi-factor authentication is **not** implemented and is listed as future work;
 
 ![](../figures/logos/png/vercel.png){height=0.6cm} **Vercel** — the hosting platform for the Next.js front end. **Render** — the hosting platform for the backend container and the managed PostgreSQL database. **Brevo** is the planned production e-mail service, to be used over its HTTP API (Gmail SMTP in development).
 
-![](../figures/logos/png/phpunit.png){height=0.6cm} **PHPUnit**[^phpunit] 11.5.55 — the back-end test framework (110 tests, IV.6).
+![](../figures/logos/png/phpunit.png){height=0.6cm} **PHPUnit**[^phpunit] 11.5.55 — the back-end test framework (111 tests, IV.6).
 
 ![](../figures/logos/png/eslint.png){height=0.6cm} **ESLint 9.39** with **Laravel Pint 1.29** — static analysis and code style for the front end and the back end.
 
@@ -105,7 +105,7 @@ Inside each application the code is organised in three layers:
 The API depends on three external services, each isolated behind a small, replaceable integration point:
 
 - **Chargily Pay v2** — hosted checkout and signed webhook for EDAHABIA/CIB payments (IV.5.3).
-- **E-mail** — Gmail SMTP in development; in production, Brevo's HTTP API is planned, because Render's free tier blocks outbound SMTP. Account e-mails are transactional (verification, password reset, welcome, receipt, reminders).
+- **E-mail** — Gmail SMTP in development; in production, Brevo's HTTP API, because Render's free tier blocks outbound SMTP. Account e-mails are transactional (verification, password reset, welcome, receipt, reminders).
 - **WireGuard gateway** — the server that terminates the tunnels. The portal issues peers and configuration files; running the gateway is the network team's responsibility and is not part of this repository.
 
 ## IV.3 Functional Modules
@@ -527,7 +527,7 @@ The private key is stored with Eloquent's `encrypted` cast and hidden from seria
 
 ### IV.6.1 Automated tests
 
-The back end is covered by an automated test suite of **110 tests (460 assertions)** that runs in about thirty seconds on an in-memory SQLite database. The tests are feature tests: each one drives the real HTTP endpoints and asserts on the response and the database state. Table IV.3 groups them by area; the same breakdown is given in Appendix C.
+The back end is covered by an automated test suite of **111 tests (463 assertions)** that runs in about thirty seconds on an in-memory SQLite database. The tests are feature tests: each one drives the real HTTP endpoints and asserts on the response and the database state. Table IV.3 groups them by area; the same breakdown is given in Appendix C.
 
 | Area | Tests | What it verifies |
 |---|---|---|
@@ -536,10 +536,10 @@ The back end is covered by an automated test suite of **110 tests (460 assertion
 | Subscriptions and VPN provisioning | 11 | Trial, renewal, cancellation, scheduled expiry, WireGuard peer issue and distinct tunnel addresses |
 | Mobile token API (Sanctum) | 9 | Token issue, protected routes, guard separation, token revocation |
 | Administration and billing | 19 | Admin-only access, statistics, refunds, plan deactivation, moderation, team subscriptions, contact requests |
-| Platform and data integrity | 2 | Demo-data seeder, scaffold test |
-| **Total** | **110** | 460 assertions, ~30 s |
+| Platform and data integrity | 3 | Demo-data seeder, production mail transport (Brevo), scaffold test |
+| **Total** | **111** | 463 assertions, ~30 s |
 
-**Table IV.3 — Backend automated test suite.** *Source: prepared by the authors, from `php artisan test` (15/10/2026).*
+**Table IV.3 — Backend automated test suite.** *Source: prepared by the authors, from `php artisan test` (18/10/2026).*
 
 Automated **frontend** testing is not yet in place and is listed as future work; Playwright is currently used to capture the interface screenshots rather than to assert on behaviour.
 
@@ -664,12 +664,12 @@ The free hosting tier has real limits worth stating plainly:
 
 * **Sleep.** The API stops after fifteen minutes without traffic; the next request wakes it, which took 14.5 s in our measurement. Access control stays correct during sleep because it compares the stored period end with the current time on every request, but scheduled tasks (expiry e-mails, VPN revocation, payment reconciliation) only run while the service is awake.
 * **Database lifetime.** A free Render PostgreSQL database expires thirty days after its creation and is deleted after a further fourteen-day grace period. Before real use, the database must be moved to a paid plan or backed up and recreated.
-* **E-mail.** Render's free tier blocks outbound SMTP. Transactional e-mail in production is therefore planned through the **Brevo** HTTP API (dashed in Figure IV.32); this transport is not yet implemented, so e-mails sent by the live site are not claimed here.
+* **E-mail.** Render's free tier blocks outbound SMTP. Transactional e-mail in production therefore goes through the **Brevo** HTTP API, wired with the Symfony Brevo transport that the Laravel documentation recommends (`MAIL_MAILER=brevo`). It becomes active once the Brevo API key and a sender address verified in Brevo are entered in the Render dashboard (dashed in Figure IV.32); delivery from the live site has not yet been tested, so it is not claimed here.
 * **Payments.** Chargily runs in **test mode**: the full payment flow works, but no real money is collected until the live keys are configured.
 
 ## Conclusion
 
-This chapter presented the implementation and the deployment of the portal. It set out the technology stack and justified a decoupled Next.js / Laravel architecture built as a modular monolith; it described the nine functional modules and walked through the client, administration and support interfaces; and it examined the critical components — security headers and rate limiting, session and Sanctum authentication, the HMAC-signed and idempotent payment flow, and the WireGuard provisioning built on Curve25519 — with excerpts from the source code. Quality is backed by an automated suite of 110 backend tests run by continuous integration, complemented by documented manual security checks. Finally, it described the production deployment on Vercel and Render, the release process, the checks run against the live system and the problems met while deploying, with their solutions.
+This chapter presented the implementation and the deployment of the portal. It set out the technology stack and justified a decoupled Next.js / Laravel architecture built as a modular monolith; it described the nine functional modules and walked through the client, administration and support interfaces; and it examined the critical components — security headers and rate limiting, session and Sanctum authentication, the HMAC-signed and idempotent payment flow, and the WireGuard provisioning built on Curve25519 — with excerpts from the source code. Quality is backed by an automated suite of 111 backend tests run by continuous integration, complemented by documented manual security checks. Finally, it described the production deployment on Vercel and Render, the release process, the checks run against the live system and the problems met while deploying, with their solutions.
 
 The chapter has also been explicit about the system's boundaries: live security scans, performance and load tests, dashboard screenshots and an end-to-end payment-and-tunnel demonstration are left as clearly marked items of future work, as are the forwarding of the visitor's real IP address to the API, transactional e-mail in production, the native mobile client and the live VPN gateway operated by the network team. The general conclusion that follows draws together the results of the whole project and its perspectives.
 

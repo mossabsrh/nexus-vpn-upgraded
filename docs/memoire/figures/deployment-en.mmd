@@ -15,7 +15,7 @@ flowchart TB
         PG[("PostgreSQL<br/>nexus_vpn")]
     end
     CH["Chargily Pay v2<br/>(test mode)"]
-    MAIL["Transactional e-mail<br/>Brevo HTTP API (planned)"]
+    MAIL["Transactional e-mail<br/>Brevo HTTP API (active once the key is set)"]
 
     GH -.->|every push| CI
     FR -->|push to main → build| V

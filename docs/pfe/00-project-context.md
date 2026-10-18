@@ -13,7 +13,7 @@
 | Frontend (racine) | Next.js 16.2.6 (App Router, Turbopack), React 19.2, TypeScript 5.7 strict, Tailwind CSS 4.2, shadcn/ui (Radix), framer-motion, next-themes ; pnpm | `04-frontend.md`, `09` |
 | Backend (`nexus-vpn/`) | Laravel 12.60 (PHP ^8.2 ; 8.2 local, 8.3 Docker), PHPUnit 11, Pint, Laravel Boost | `05-backend.md`, `09` |
 | Base de données | SQLite (local, tests en mémoire), PostgreSQL (production) ; 18 migrations (dont `personal_access_tokens`, Sanctum — app mobile reportée) | `06-database.md` |
-| Services | Chargily Pay v2 (mode test), WireGuard (passerelle externe), SMTP | `13-deployment.md` |
+| Services | Chargily Pay v2 (mode test), WireGuard (passerelle externe), e-mail : Gmail SMTP (local) / API HTTP Brevo (production) | `13-deployment.md` |
 | Hébergement | Vercel (frontend) + Render Free (Docker PHP/Apache + PostgreSQL, Francfort) | `13-deployment.md` |
 
 ## Organisation des dossiers
@@ -59,7 +59,7 @@
 ## État actuel (2026-10-05)
 
 * Code inchangé depuis le commit initial `067e68d` ; documentation de référence complète (commits `e246b4d` → `4e9c025` + synthèse finale).
-* Tests : backend 110/110 réussis (2026-10-15, après suppression des 25 tests hérités ; en local, l'extension PHP `sodium` doit être activée) ; frontend : lint, types et build réussis ; aucun test frontend.
+* Tests : backend 111/111 réussis (2026-10-18 ; suppression des 25 tests hérités le 2026-10-15 ; en local, l'extension PHP `sodium` doit être activée) ; frontend : lint, types et build réussis ; aucun test frontend.
 * Exigences : 31 FR, 14 NFR (`02`) ; 22 fonctionnalités (`10`) ; 20 problèmes résolus (`14`) ; 12 décisions (`15`).
 * Historique : l'essentiel du durcissement et des fonctionnalités a été réalisé les 2026-10-04/05 juste avant le versionnement (`11` §2.5, `17`).
 * Risques ouverts principaux (`08` §11) : R-01 révocation VPN non propagée à la passerelle, R-02 base Render Free expirant après 30 jours, R-04 planificateur en veille, R-05 IP du visiteur non connue de Laravel en production (proxys changeants, mesuré le 2026-10-15). R-03 (routes héritées) corrigé le 2026-10-15.

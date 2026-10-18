@@ -7,11 +7,14 @@ use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use RuntimeException;
+use Symfony\Component\Mailer\Bridge\Brevo\Transport\BrevoTransportFactory;
+use Symfony\Component\Mailer\Transport\Dsn;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -33,6 +36,17 @@ class AppServiceProvider extends ServiceProvider
         $this->guardProductionConfiguration();
         $this->configureRateLimiting();
         $this->configureEmailLinks();
+        $this->configureMailTransports();
+    }
+
+    /**
+     * Brevo's HTTP API ("brevo" mailer), used in production where outbound SMTP is blocked.
+     */
+    private function configureMailTransports(): void
+    {
+        Mail::extend('brevo', fn () => (new BrevoTransportFactory)->create(
+            new Dsn('brevo+api', 'default', config('services.brevo.key'))
+        ));
     }
 
     private function configureRateLimiting(): void
@@ -110,6 +124,7 @@ class AppServiceProvider extends ServiceProvider
             config('services.chargily.mode') !== 'live' ? 'CHARGILY_MODE is not live' : null,
             str_ends_with((string) config('mail.from.address'), '@example.com') ? 'MAIL_FROM_ADDRESS is a placeholder' : null,
             in_array(config('mail.default'), ['log', 'array'], true) ? 'MAIL_MAILER does not deliver email' : null,
+            config('mail.default') === 'brevo' && blank(config('services.brevo.key')) ? 'BREVO_API_KEY is missing' : null,
             config('session.encrypt') ? null : 'SESSION_ENCRYPT is false',
             config('logging.channels.'.config('logging.default').'.level') === 'debug' ? 'LOG_LEVEL is debug' : null,
         ]);

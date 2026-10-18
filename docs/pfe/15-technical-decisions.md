@@ -114,6 +114,6 @@
 * **Contexte** : depuis 2025-09, **Render Free bloque les ports SMTP sortants (25/465/587)** ; la configuration Gmail SMTP ne pourra donc pas livrer d'e-mails en production.
 * **Alternatives** : instance Render payante (garde le SMTP) ; Resend/Mailgun/Postmark (API HTTP mais exigent souvent un domaine vérifié) ; **Brevo** via API HTTP (retenu).
 * **Choix** : **Brevo**, qui fonctionne avec un **expéditeur unique vérifié, sans domaine**. En local, Gmail SMTP est conservé.
-* **Conséquences** : petit changement de configuration mailer + une clé API (créée par l'étudiant), **appliqué au moment du déploiement** (D-17 du mémoire). `config/services.php` câble déjà des mailers HTTP (`resend`, `postmark`) ; Brevo s'ajoute de la même façon.
+* **Conséquences** : deux paquets Symfony (`symfony/brevo-mailer`, `symfony/http-client`), un mailer `brevo` et une clé API créée par l'étudiant ; **câblé le 2026-10-18** (méthode officielle Laravel 12, `13-deployment.md`). Activation effective en production dès la saisie de `BREVO_API_KEY` dans Render.
 
 **Total : 16 décisions documentées.**

@@ -11,7 +11,7 @@
 | Base de données | **Render PostgreSQL** | `nexus-vpn-db` (base `nexus_vpn`, utilisateur `nexus_vpn`) | Francfort, offre **Free** |
 | Paiement | Chargily Pay v2 | Service externe | Mode `test` dans `render.yaml` |
 | Passerelle VPN WireGuard | — | Serveur externe | ⚠️ À VÉRIFIER : aucun serveur WireGuard n'est décrit dans le dépôt (seules `VPN_SERVER_PUBLIC_KEY`/`VPN_SERVER_ENDPOINT` sont attendues) |
-| Envoi d'e-mails | **Dev : Gmail SMTP** ; **Production : Brevo (API HTTP)** | Service externe | ⚠️ **Render Free bloque le SMTP sortant (25/465/587)** → la production utilise l'API HTTP **Brevo** (expéditeur unique vérifié, sans domaine ; D-16/D-17 du mémoire, `15` TD-16). Secrets à saisir dans Render au déploiement |
+| Envoi d'e-mails | **Dev : Gmail SMTP** ; **Production : Brevo (API HTTP)** | Service externe | ⚠️ **Render Free bloque le SMTP sortant (25/465/587)** → la production utilise l'API HTTP **Brevo** (expéditeur unique vérifié, sans domaine ; D-17 du mémoire, `15` TD-16). Câblé le 2026-10-18 ; `BREVO_API_KEY` et `MAIL_FROM_ADDRESS` à saisir dans Render |
 
 Flux en production : navigateur → Vercel (`/backend-api/*` réécrit) → Render (`/api/*`) → PostgreSQL. Chargily appelle directement le webhook sur le domaine Render. Détails du flux : `07-api.md` §1.
 
@@ -72,7 +72,7 @@ Synchronisation des pairs VPN : manuelle (`php artisan vpn:peers` puis `wg syncc
 
 1. Render : créer un Blueprint à partir du dépôt GitHub et sélectionner `render.yaml`.
 2. Attendre que `nexus-vpn-api` soit sain (`/up`) ; les migrations s'exécutent au démarrage.
-3. Saisir les secrets `sync: false` dans Render (Chargily, SMTP, VPN). ⚠️ À VÉRIFIER : cette étape n'est pas détaillée dans `DEPLOYMENT.md`.
+3. Saisir les secrets `sync: false` dans Render (Chargily, `BREVO_API_KEY` + `MAIL_FROM_ADDRESS`, VPN). ⚠️ À VÉRIFIER : cette étape n'est pas détaillée dans `DEPLOYMENT.md`.
 4. Copier l'URL publique du service Render.
 5. Vercel : définir `NEXT_PUBLIC_API_URL` avec cette URL, puis redéployer.
 6. Chargily : configurer l'URL du webhook `https://<service-render>/api/webhooks/chargily`. ⚠️ À VÉRIFIER : non mentionné dans `DEPLOYMENT.md`.
@@ -93,7 +93,7 @@ Synchronisation des pairs VPN : manuelle (`php artisan vpn:peers` puis `wg syncc
 | `CACHE_STORE`, `QUEUE_CONNECTION` | Cache et files | `render.yaml` / `.env` |
 | `LOG_CHANNEL`, `LOG_LEVEL` | Journalisation | `render.yaml` / `.env` |
 | `CHARGILY_MODE`, `CHARGILY_SECRET_KEY` | Paiement (test/live), clé API + HMAC | `render.yaml` + secret Render / `.env` |
-| `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` | E-mails | `render.yaml` + secrets Render / `.env` |
+| `MAIL_MAILER`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` ; production : `BREVO_API_KEY` ; local : `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_ENCRYPTION` | E-mails | `render.yaml` + secrets Render / `.env` |
 | `VPN_SERVER_PUBLIC_KEY`, `VPN_SERVER_ENDPOINT` | Passerelle WireGuard (obligatoires pour délivrer une configuration) | secrets Render / `.env` |
 | `VPN_DNS`, `VPN_ALLOWED_IPS`, `VPN_ADDRESS_POOL`, `VPN_CLIENT_PREFIX` | Paramètres WireGuard optionnels (valeurs par défaut dans `config/services.php`) | `.env` (absentes de `render.yaml` : valeurs par défaut en production) |
 | `BCRYPT_ROUNDS` | Coût du hachage des mots de passe | `.env` |
@@ -147,4 +147,4 @@ Depuis le 2026-10-06, l'envoi d'e-mails passe par **Gmail SMTP** : `MAIL_MAILER=
 
 Envoi réel vérifié le 2026-10-06 (e-mail de vérification livré via Gmail). Le paiement Chargily exige une clé de test et une URL publique pour recevoir le webhook (la vérification active via la page de résultat fonctionne sans webhook).
 
-**Production — Render bloque le SMTP.** Depuis 2025-09, **Render Free bloque les ports SMTP sortants (25/465/587)** ; l'envoi en production ne passera donc **pas** par Gmail SMTP mais par l'**API HTTP de Brevo** (compte gratuit, expéditeur unique vérifié, sans domaine requis), câblée **au moment du déploiement** (petit changement de mailer + clé API ; voir `15-technical-decisions.md` TD-16). `config/services.php` câble déjà des mailers HTTP (`resend`, `postmark`) ; Brevo s'ajoute de la même façon. En **local**, Gmail SMTP reste utilisé.
+**Production — Render bloque le SMTP.** Depuis 2025-09, **Render Free bloque les ports SMTP sortants (25/465/587)** ; l'envoi en production ne passera donc **pas** par Gmail SMTP mais par l'**API HTTP de Brevo** (compte gratuit, expéditeur unique vérifié, sans domaine requis), **câblée le 2026-10-18** selon la méthode officielle de Laravel 12 (« Additional Symfony Transports ») : paquets `symfony/brevo-mailer` et `symfony/http-client`, transport enregistré par `Mail::extend('brevo', …)` dans `AppServiceProvider`, mailer `brevo` dans `config/mail.php`, clé `services.brevo.key` lue depuis `BREVO_API_KEY`. `render.yaml` fixe `MAIL_MAILER=brevo` ; il reste à saisir dans Render `BREVO_API_KEY` (Brevo > SMTP & API > API Keys) et `MAIL_FROM_ADDRESS` (expéditeur vérifié dans Brevo). Au démarrage en production, un avertissement est journalisé si `MAIL_MAILER=brevo` sans clé. Test : `tests/Feature/BrevoMailerTest.php`. En **local**, Gmail SMTP reste utilisé. ⚠️ À VÉRIFIER : livraison réelle depuis le site en ligne non encore testée.

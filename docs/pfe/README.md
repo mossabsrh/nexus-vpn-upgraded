@@ -72,7 +72,7 @@ Toutes les mentions ⚠️ À VÉRIFIER des fichiers, reformulées en questions.
 ### `09-technologies-and-packages.md`
 - [ ] L'extension PHP `sodium` est-elle bien disponible dans l'image Docker de production ?
 - [ ] `laravel/sail` est-il utilisé ?
-- [ ] Quel fournisseur SMTP est utilisé en production ?
+- [x] Quel fournisseur e-mail est utilisé en production ? → **Brevo (API HTTP)**, Render Free bloquant le SMTP ; câblé le 2026-10-18, actif dès la saisie de `BREVO_API_KEY`.
 
 ### `11-development-history.md`
 - [ ] Quelles sont les dates réelles de début du projet et des grandes étapes ? Existe-t-il un historique git antérieur (dépôt GitHub) ?
@@ -82,7 +82,7 @@ Toutes les mentions ⚠️ À VÉRIFIER des fichiers, reformulées en questions.
 ### `13-deployment.md`
 - [ ] Sur quelle offre et dans quelle région Vercel le frontend est-il déployé ?
 - [ ] Quel serveur héberge la passerelle WireGuard (fournisseur, configuration) ? Existe-t-il réellement ?
-- [ ] Quel fournisseur SMTP est configuré dans Render ?
+- [x] Quel fournisseur e-mail est configuré dans Render ? → `MAIL_MAILER=brevo` (`render.yaml`) ; `BREVO_API_KEY` et `MAIL_FROM_ADDRESS` à saisir dans le tableau de bord.
 - [ ] Quelle version de Node.js Vercel utilise-t-il ?
 - [ ] Le planificateur s'arrête-t-il effectivement pendant la mise en veille du service Render gratuit ?
 - [ ] Comment les secrets `sync: false` ont-ils été saisis dans Render (procédure à documenter) ?

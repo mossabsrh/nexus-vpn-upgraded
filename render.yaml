@@ -52,18 +52,11 @@ services:
         value: test
       - key: CHARGILY_SECRET_KEY
         sync: false
+      # Render's free tier blocks outbound SMTP: mail is sent through Brevo's HTTP API.
       - key: MAIL_MAILER
-        value: smtp
-      - key: MAIL_HOST
-        value: smtp.gmail.com
-      - key: MAIL_PORT
-        value: "587"
-      - key: MAIL_ENCRYPTION
-        value: tls
-      # Gmail account, App Password and from-address are secrets: set in the Render dashboard.
-      - key: MAIL_USERNAME
-        sync: false
-      - key: MAIL_PASSWORD
+        value: brevo
+      # Brevo API key and the sender address verified in Brevo: set in the Render dashboard.
+      - key: BREVO_API_KEY
         sync: false
       - key: MAIL_FROM_ADDRESS
         sync: false

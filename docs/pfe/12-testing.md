@@ -27,6 +27,7 @@
 | `tests/Feature/Api/AccountDeletionTest.php` | 5 | `DELETE /api/account` : anonymisation + soft delete en conservant l'historique de facturation, impossibilité de se réauthentifier ensuite, exigence du mot de passe actuel (422), blocage des administrateurs (409 `admin_account`) et des propriétaires d'équipe (409 `team_owner`) |
 | `tests/Feature/Api/AdminUserDeletionTest.php` | 6 | `DELETE /api/admin/users/{user}` : anonymisation + conservation de l'historique, suppression d'un autre administrateur (s'il en reste un), refus de se supprimer soi-même et du dernier administrateur et d'un propriétaire d'équipe (422), refus pour un non-administrateur (403) |
 | `tests/Feature/Api/LoginAfterDeletionTest.php` | 3 | Régression connexion/suppression : un compte actif se connecte avec le bon mot de passe (e-mail insensible à la casse), un compte fermé (anonymisé) ne peut plus se connecter (401), et l'e-mail libéré peut être réutilisé à l'inscription (le nouveau mot de passe fonctionne, l'ancien non) |
+| `tests/Feature/BrevoMailerTest.php` | 1 | **Mailer de production `brevo`** : le transport résolu est l'API HTTP Brevo (`brevo+api://api.brevo.com`, pas SMTP) et utilise la clé `services.brevo.key` |
 | `tests/Feature/Api/LegacyRoutesTest.php` | 4 | **Routes web héritées supprimées (R-03)** : `POST /register`, `/login`, `/forgot-password`, `/reset-password` → `404` sans création de compte ; `dashboard` et `settings/profile|password` → `404` sans modification ni suppression du compte ; `/` redirige vers `FRONTEND_URL` ; invité sur `GET /api/me` sans en-tête JSON → `401` (pas de redirection vers une route `login` inexistante) |
 
 ### Autres
@@ -37,7 +38,7 @@
 
 Les 25 tests hérités du starter kit (`tests/Feature/Auth/*`, `tests/Feature/Settings/*`, `tests/Feature/DashboardTest.php`) ont été supprimés le 2026-10-15 avec les routes qu'ils testaient (R-03).
 
-Total : 110 tests (exécution du 2026-10-15).
+Total : 111 tests (exécution du 2026-10-18).
 
 ### Zones non couvertes identifiées
 

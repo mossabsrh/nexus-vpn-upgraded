@@ -42,7 +42,7 @@ The application is configured entirely through environment variables; the table 
 | Application | `APP_NAME`, `APP_ENV`, `APP_KEY`, `APP_DEBUG`, `APP_URL`, `FRONTEND_URL` |
 | Database | `DB_CONNECTION` (and the `DB_*` host/credentials for PostgreSQL in production) |
 | Session | `SESSION_DRIVER`, `SESSION_ENCRYPT`, `SESSION_LIFETIME`, `SESSION_DOMAIN` |
-| Mail | `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_ENCRYPTION`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` |
+| Mail | `MAIL_MAILER`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME`; production: `BREVO_API_KEY`; development (SMTP): `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_ENCRYPTION` |
 | Payment (Chargily) | `CHARGILY_MODE`, `CHARGILY_SECRET_KEY`, `CHARGILY_WEBHOOK_URL` |
 | VPN (WireGuard gateway) | `VPN_SERVER_PUBLIC_KEY`, `VPN_SERVER_ENDPOINT`, `VPN_DNS`, `VPN_ALLOWED_IPS`, `VPN_ADDRESS_POOL`, `VPN_CLIENT_PREFIX` |
 | Mobile token (Sanctum) | `SANCTUM_TOKEN_EXPIRATION` |
@@ -51,7 +51,7 @@ The application is configured entirely through environment variables; the table 
 
 ## Appendix C — Summary of the automated test suite
 
-The back end is covered by **110 tests (460 assertions)** that run in about thirty seconds on an in-memory SQLite database. The breakdown by area is given in the body of the thesis (Table IV.3): authentication, account and security (28); payments and webhooks (41); subscriptions and VPN provisioning (11); mobile token API (9); administration and billing (19); platform and data integrity (2). The automated front-end test suite is future work; Playwright is currently used to capture the interface screenshots.
+The back end is covered by **111 tests (463 assertions)** that run in about thirty seconds on an in-memory SQLite database. The breakdown by area is given in the body of the thesis (Table IV.3): authentication, account and security (28); payments and webhooks (41); subscriptions and VPN provisioning (11); mobile token API (9); administration and billing (19); platform and data integrity (3). The automated front-end test suite is future work; Playwright is currently used to capture the interface screenshots.
 
 *Source: prepared by the authors, from `php artisan test`.*
 

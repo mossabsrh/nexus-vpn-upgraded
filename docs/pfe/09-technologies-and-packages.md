@@ -48,7 +48,7 @@ Aucun SDK Chargily n'est utilisé : l'intégration passe par le client HTTP de L
 | Chargily Pay v2 | Paiement en ligne (DZD) : checkouts, webhooks signés HMAC-SHA256 | `CHARGILY_MODE`, `CHARGILY_SECRET_KEY` |
 | WireGuard | Protocole VPN ; configuration client générée par l'API, pairs exportés via `vpn:peers` | `VPN_*` |
 | E-mail — Gmail SMTP (dev) | E-mails de vérification, réinitialisation, bienvenue, reçu, rappels (`smtp.gmail.com:587`, TLS, compte dédié + mot de passe d'application) | `MAIL_*` dans `.env` (identifiants non versionnés) |
-| E-mail — **Brevo (production)** | **Render Free bloque le SMTP sortant** → en production, envoi via l'**API HTTP Brevo** (expéditeur unique vérifié, sans domaine). À câbler au déploiement (D-16/D-17 du mémoire) | clé API Brevo (secret Render) |
+| E-mail — **Brevo (production)** | **Render Free bloque le SMTP sortant** → en production, envoi via l'**API HTTP Brevo** (expéditeur unique vérifié, sans domaine). Câblé dans le code le 2026-10-18 (`symfony/brevo-mailer` + `symfony/http-client` ^7.4, mailer `brevo`, `MAIL_MAILER=brevo` dans `render.yaml`) ; **actif en production seulement une fois `BREVO_API_KEY` et un `MAIL_FROM_ADDRESS` vérifié dans Brevo saisis dans Render** (⚠️ À VÉRIFIER : livraison réelle depuis le site en ligne non encore testée) | `BREVO_API_KEY` (secret Render) |
 | Render (hébergement) | Déploiement du conteneur Docker du backend et base PostgreSQL | `render.yaml` (racine du dépôt) |
 
 ### Paquets JavaScript dans `nexus-vpn/package.json`

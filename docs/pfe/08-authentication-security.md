@@ -114,7 +114,8 @@ Aucune valeur secrète n'est versionnée (`.gitignore` exclut `.env*` sauf `.env
 |---|---|---|---|
 | `APP_KEY` / `APP_KEY_SECRET` | Backend | Clé de chiffrement (cookies, sessions, clés WireGuard) | Local : `nexus-vpn/.env` (`php artisan key:generate`) ; Render : `APP_KEY_SECRET` généré par Render (`generateValue: true`), converti en `APP_KEY` par `docker/entrypoint.sh` |
 | `CHARGILY_SECRET_KEY` | Backend | Clé API Chargily **et** clé HMAC du webhook | Local : `.env` ; Render : saisie manuelle dans le tableau de bord (`sync: false`) |
-| `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM_ADDRESS` | Backend | Envoi SMTP | Render : saisie manuelle (`sync: false`) |
+| `BREVO_API_KEY`, `MAIL_FROM_ADDRESS` | Backend | Envoi d'e-mails en production (API HTTP Brevo) | Render : saisie manuelle (`sync: false`) |
+| `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` | Backend | Envoi SMTP en local (Gmail) | `.env` local uniquement |
 | `DB_URL` | Backend | Connexion PostgreSQL | Render : injectée depuis la base `nexus-vpn-db` (`fromDatabase`) |
 | `VPN_SERVER_PUBLIC_KEY`, `VPN_SERVER_ENDPOINT` | Backend | Passerelle WireGuard (non secrets mais propres au déploiement) | Render : saisie manuelle (`sync: false`) |
 | `NEXT_PUBLIC_API_URL` | Frontend | URL du service Laravel (publique, non secrète) | Vercel : variables du projet (Production / Preview) ; local : facultative (repli sur le serveur Laravel local) |
